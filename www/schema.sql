@@ -43,3 +43,17 @@ create table comments (
     key `idx_created_at` (`created_at`),
     primary key (`id`)
 ) engine=innodb default charset=utf8;
+
+create table datasources (
+    `id` varchar(50) not null,
+    `db_type` varchar(10) not null,
+    `host` varchar(50) not null,
+    `port` int not null,
+    `database` varchar(50) not null,
+    `user` varchar(50) not null,
+    `password` varchar(50) not null,
+    `options` varchar(500) null,
+    `created_at` real not null,
+    key `idx_created_at` (`created_at`),
+    primary key (`id`)
+) engine=innodb default charset=utf8;

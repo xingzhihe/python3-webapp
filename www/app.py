@@ -16,7 +16,7 @@ from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
 
 import orm
-from coroweb import add_routes, add_static
+from coroweb import add_routes, add_static, get_modules
 
 from handlers import cookie2user, COOKIE_NAME
 
@@ -140,8 +140,11 @@ async def init(loop):
         logger_factory, auth_factory, response_factory
     ])
     init_jinja2(app, filters=dict(datetime=datetime_filter))
-    add_routes(app, 'handlers')
     add_static(app)
+    #add_routes(app, 'handlers')
+    for module in get_modules('controllers'):
+        logging.info(module)
+        add_routes(app, module)
     srv = await loop.create_server(app.make_handler(), '127.0.0.1', 9000)
     logging.info('server started at http://127.0.0.1:9000...')
     return srv

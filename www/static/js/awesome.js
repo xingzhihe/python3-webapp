@@ -347,6 +347,22 @@ function postJSON(url, data, callback) {
     _httpJSON('POST', url, data, callback);
 }
 
+function putJSON(url, data, callback) {
+    if (arguments.length===2) {
+        callback = data;
+        data = {};
+    }
+    _httpJSON('PUT', url, data, callback);
+}
+
+function deleteJSON(url, data, callback) {
+    if (arguments.length===2) {
+        callback = data;
+        data = {};
+    }
+    _httpJSON('DELETE', url, data, callback);
+}
+
 // extends Vue:
 
 if (typeof(Vue)!=='undefined') {

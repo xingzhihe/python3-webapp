@@ -37,6 +37,45 @@ def post(path):
         return wrapper
     return decorator
 
+def put(path):
+    '''
+    Define decorator @put('/path')
+    '''
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kw):
+            return func(*args, **kw)
+        wrapper.__method__ = 'PUT'
+        wrapper.__route__ = path
+        return wrapper
+    return decorator
+
+def patch(path):
+    '''
+    Define decorator @patch('/path')
+    '''
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kw):
+            return func(*args, **kw)
+        wrapper.__method__ = 'PATCH'
+        wrapper.__route__ = path
+        return wrapper
+    return decorator
+
+def delete(path):
+    '''
+    Define decorator @delete('/path')
+    '''
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kw):
+            return func(*args, **kw)
+        wrapper.__method__ = 'DELETE'
+        wrapper.__route__ = path
+        return wrapper
+    return decorator
+
 def get_required_kw_args(fn):
     args = []
     params = inspect.signature(fn).parameters
@@ -171,3 +210,19 @@ def add_routes(app, module_name):
             path = getattr(fn, '__route__', None)
             if method and path:
                 add_route(app, fn)
+
+def get_modules(pkg):
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    pkg=os.path.join(curr_dir,pkg)
+    modules = get_files(pkg)
+    return map(lambda i:i.replace(curr_dir,'')[1:-3].replace(os.path.sep,'.'), modules)
+
+def get_files(pkg, ext='.py'):
+    list=[]
+    for f in os.listdir(pkg):
+        ff=os.path.join(pkg,f)
+        if os.path.isdir(ff):
+            list += get_files(ff, ext)
+        elif not f.startswith('_') and os.path.splitext(ff)[1]==ext:
+            list.append(ff)
+    return list
