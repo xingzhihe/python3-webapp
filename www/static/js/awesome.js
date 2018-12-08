@@ -295,6 +295,24 @@ $(function () {
                     callback && callback(err, r);
                 });
             });
+        },
+        putJSON: function (url, data, callback) {
+            if (arguments.length===2) {
+                callback = data;
+                data = {};
+            }
+            return this.each(function () {
+                var $form = $(this);
+                $form.showFormError();
+                $form.showFormLoading(true);
+                _httpJSON('PUT', url, data, function (err, r) {
+                    if (err) {
+                        $form.showFormError(err);
+                        $form.showFormLoading(false);
+                    }
+                    callback && callback(err, r);
+                });
+            });
         }
     });
 });
@@ -304,12 +322,18 @@ $(function () {
 function _httpJSON(method, url, data, callback) {
     var opt = {
         type: method,
+        url : url,
         dataType: 'json'
     };
     if (method==='GET') {
         opt.url = url + '?' + data;
     }
-    if (method==='POST') {
+    else if (method==='POST') {
+        opt.url = url;
+        opt.data = JSON.stringify(data || {});
+        opt.contentType = 'application/json';
+    }
+    else if (method==='PUT') {
         opt.url = url;
         opt.data = JSON.stringify(data || {});
         opt.contentType = 'application/json';

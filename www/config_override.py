@@ -8,7 +8,7 @@ Override configurations.
 __author__ = 'zhihe xing'
 
 configs = {
-    'db': {
+    'ds': {
         'host': '127.0.0.1',
         'user': 'root',
         'password': 'root'

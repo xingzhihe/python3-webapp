@@ -16,15 +16,25 @@ function initVM(blog) {
             submit: function (event) {
                 event.preventDefault();
                 var $form = $('#vm').find('form');
-                $form.postJSON(action, this.$data, function (err, r) {
-                    if (err) {
-                        $form.showFormError(err);
-                    }
-                    else {
-                        //return location.assign('/api/blogs/' + r.id);
-                        return location.assign('/manage/blogs');
-                    }
-                });
+                if (ID) {
+                    $form.putJSON(action, this.$data, function (err, r) {
+                        if (err) {
+                            $form.showFormError(err);
+                        }
+                        else {
+                            return location.assign('/manage/datasources');
+                        }
+                    });
+                } else{
+                    $form.postJSON(action, this.$data, function (err, r) {
+                        if (err) {
+                            $form.showFormError(err);
+                        }
+                        else {
+                            return location.assign('/manage/datasources');
+                        }
+                    });
+                }
             }
         }
     });
@@ -32,7 +42,7 @@ function initVM(blog) {
 }
 $(function () {
     if (ID) {
-        getJSON('/api/blogs/' + ID, function (err, blog) {
+        getJSON('/api/datasources/' + ID, function (err, blog) {
             if (err) {
                 return fatal(err);
             }
