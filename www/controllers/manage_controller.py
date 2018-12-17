@@ -40,10 +40,18 @@ def manage_datasources_create(*, page='1'):
         'id': '',
         'action': '/api/datasources'
     }
+
 @get('/manage/datasources/{id}')
 def manage_datasources_edit(*, id):
     return {
         '__template__': 'datasource_edit.html',
         'id': id,
         'action': '/api/datasources/%s' % id
+    }
+
+@get('/manage/metadata')
+def manage_metadata(*, page='1'):
+    return {
+        '__template__': 'metadata.html',
+        'page_index': get_page_index(page)
     }

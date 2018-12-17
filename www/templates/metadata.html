@@ -1,6 +1,6 @@
 {% extends '__base__.html' %}
 
-{% block title %}数据源{% endblock %}
+{% block title %}元数据{% endblock %}
 
 {% block beforehead %}
 
@@ -27,7 +27,27 @@
                             refresh();
                         });
                     }
+                },
+                show_tables: function(ds){
+                    alert(ds.host+":"+ds.port);
+                    // databases  tables
+                    getJSON('/api/datasources/'+ds.id+'/databases', function (err, results) {
+                        if (err) {
+                            return fatal(err);
+                        }
+                        //$('#loading').hide();
+                        initTables(results);
+                    });
                 }
+            }
+        });
+    }
+    function initTables(data) {
+        $('#vm_tables').show();
+        var vm_tables = new Vue({
+            el: '#vm_tables',
+            data: {
+                tables: data.tables
             }
         });
     }
@@ -54,8 +74,8 @@
                 <li><a href="/manage/comments">评论</a></li>
                 <li><a href="/manage/blogs">日志</a></li>
                 <li><a href="/manage/users">用户</a></li>
-                <li class="uk-active"><span>数据源</span></li>
-                <li><a href="/manage/metadata">元数据</a></li>
+                <li><a href="/manage/datasources">数据源</a></li>
+                <li class="uk-active"><span>元数据</span></li>
             </ul>
         </div>
     </div>
@@ -113,10 +133,30 @@
                     <td>
                         <a href="#0" v-on="click: edit_datasource(ds)"><i class="uk-icon-edit"></i></a>
                         <a href="#0" v-on="click: delete_datasource(ds)"><i class="uk-icon-trash-o"></i></a>
+                        <a href="#0" v-on="click: show_tables(ds)"><i class="uk-icon-link">查看表</i></a>
                     </td>
                 </tr>
             </tbody>
         </table>
         <div v-component="pagination" v-with="page"></div>
+    </div>
+
+    <div id="vm_tables" class="uk-width-1-1" style="display:none">
+        
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th class="uk-width-1-1">name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="ds: tables" >
+                    <td>
+                        <span v-text="ds.name"></span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- <div v-component="pagination" v-with="page"></div> -->
     </div>
 {% endblock %}

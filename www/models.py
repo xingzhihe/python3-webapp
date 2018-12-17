@@ -57,6 +57,10 @@ class DataSource(Model):
 
     def get_Connection_String(self):
         return '%s://%s:%d/%s' % (self.db_type, self.host, self.port, self.database)
+    
+    def show_Tables(self):
+        connString = '%s://%s:%d/%s' % (self.db_type, self.host, self.port, self.database)
+        return connString
 
 if __name__ == '__main__':
     ds=DataSource(db_type='mysql', host='127.0.0.1', port=3306, database='awesome', user='etlusr', password='etlusr')

@@ -51,3 +51,17 @@ async def api_datasource_delete(request, *, id):
     ds = await DataSource.find(id)
     await ds.remove()
     return dict(id=id)
+
+@get('/api/datasources/{id}/databases')
+async def api_datasource_databases(*, id):
+    ds = await DataSource.find(id)
+    from impalaConnection import showDatabases
+    databses = showDatabases()
+    return dict(tables=databses)
+
+@get('/api/datasources/{id}/tables')
+async def api_datasource_tables(*, id):
+    ds = await DataSource.find(id)
+    from impalaConnection import showTables
+    tables = showTables()
+    return dict(tables=tables)
