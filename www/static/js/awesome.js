@@ -325,7 +325,7 @@ function _httpJSON(method, url, data, callback) {
         url : url,
         dataType: 'json'
     };
-    if (method==='GET') {
+    if (method==='GET' && data.length > 0) {
         opt.url = url + '?' + data;
     }
     else if (method==='POST') {

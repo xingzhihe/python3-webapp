@@ -18,7 +18,7 @@
                     location.assign('/manage/datasources/' + ds.id);
                 },
                 delete_datasource: function (ds) {
-                    var msg = ds.database + '@' + ds.host;
+                    var msg = ds.host + ':' + ds.port;
                     if (confirm('确认要删除数据源“' + msg + '”？删除后不可恢复！')) {
                         deleteJSON('/api/datasources/' + ds.id, function (err, r) {
                             if (err) {
@@ -28,28 +28,72 @@
                         });
                     }
                 },
-                show_tables: function(ds){
-                    alert(ds.host+":"+ds.port);
-                    // databases  tables
+                show_databases: function(ds){
                     getJSON('/api/datasources/'+ds.id+'/databases', function (err, results) {
                         if (err) {
                             return fatal(err);
                         }
                         //$('#loading').hide();
-                        initTables(results);
+                        initDatabases(ds, results);
                     });
                 }
             }
         });
     }
-    function initTables(data) {
-        $('#vm_tables').show();
-        var vm_tables = new Vue({
-            el: '#vm_tables',
-            data: {
-                tables: data.tables
-            }
-        });
+
+    var vm_databases = undefined;
+    function initDatabases(ds, data) {
+        if(vm_tables){
+            vm_databases.$data = { databses: data.databses };
+        } else {
+            $('#vm_databases').show();
+            vm_databases = new Vue({
+                el: '#vm_databases',
+                data: {
+                    databses: data.databses
+                },
+                methods: {
+                    edit_database: function (db) {
+                        location.assign('/manage/datasources/' + ds.id + '/' + db.name);
+                    },
+                    delete_database: function (db) {
+                        var msg = db.name + '@' + ds.host + ':' + ds.port;
+                        if (confirm('确认要删除数据库“' + msg + '”？删除后不可恢复！')) {
+                            deleteJSON('/api/datasources/' + ds.id + '/databases/' + db.name, function (err, r) {
+                                if (err) {
+                                    return error(err);
+                                }
+                                refresh();
+                            });
+                        }
+                    },
+                    show_tables: function(db){
+                        getJSON('/api/datasources/'+ds.id+'/databases/'+db.name+'/tables', function (err, results) {
+                            if (err) {
+                                return fatal(err);
+                            }
+                            //$('#loading').hide();
+                            initTables(ds, db, results);
+                        });
+                    }
+                }
+            });
+        }
+    }
+    
+    var vm_tables = undefined;
+    function initTables(ds, db, data) {
+        if(vm_tables){
+            vm_tables.$data = { tables: data.tables };
+        } else {
+            $('#vm_tables').show();
+            vm_tables = new Vue({
+                el: '#vm_tables',
+                data: {
+                    tables: data.tables
+                }
+            });
+        }
     }
     $(function() {
         getJSON('/api/datasources', {
@@ -133,7 +177,7 @@
                     <td>
                         <a href="#0" v-on="click: edit_datasource(ds)"><i class="uk-icon-edit"></i></a>
                         <a href="#0" v-on="click: delete_datasource(ds)"><i class="uk-icon-trash-o"></i></a>
-                        <a href="#0" v-on="click: show_tables(ds)"><i class="uk-icon-link">查看表</i></a>
+                        <a href="#0" v-on="click: show_databases(ds)"><i class="uk-icon-link">查看库</i></a>
                     </td>
                 </tr>
             </tbody>
@@ -141,18 +185,53 @@
         <div v-component="pagination" v-with="page"></div>
     </div>
 
+    <div id="vm_databases" class="uk-width-1-1" style="display:none">
+        
+        <table class="uk-table uk-table-hover">
+            <thead>
+                <tr>
+                    <th class="uk-width-2-5">name</th>
+                    <th class="uk-width-2-5">comment</th>
+                    <th class="uk-width-1-5">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="ds: databses" >
+                    <td>
+                        <span v-text="ds.name"></span>
+                    </td>
+                    <td>
+                        <span v-text="ds.comment"></span>
+                    </td>
+                    <td>
+                        <a href="#0" v-on="click: show_tables(ds)"><i class="uk-icon-link">查看表</i></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- <div v-component="pagination" v-with="page"></div> -->
+    </div>
+
     <div id="vm_tables" class="uk-width-1-1" style="display:none">
         
         <table class="uk-table uk-table-hover">
             <thead>
                 <tr>
-                    <th class="uk-width-1-1">name</th>
+                    <th class="uk-width-2-5">name</th>
+                    <th class="uk-width-2-5">comment</th>
+                    <th class="uk-width-1-5">操作</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-repeat="ds: tables" >
+                <tr v-repeat="item: tables" >
                     <td>
-                        <span v-text="ds.name"></span>
+                        <span v-text="item.name"></span>
+                    </td>
+                    <td>
+                        <span v-text="item.comment"></span>
+                    </td>
+                    <td>
+                        <a href="#0" v-on="click: show_tables(item)"><i class="uk-icon-link">查看列</i></a>
                     </td>
                 </tr>
             </tbody>

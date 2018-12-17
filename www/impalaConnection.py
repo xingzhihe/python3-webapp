@@ -22,8 +22,8 @@ SELECT * FROM TBLS WHERE TBL_ID=204386;
 SELECT * FROM SDS WHERE SD_ID=315526;
 SELECT * FROM COLUMNS_V2 WHERE CD_ID=204888 ORDER BY INTEGER_IDX;
 '''
-def showDatabases():
-    conn = connect(host='10.10.8.102', port=21050)
+def showDatabases(ds):
+    conn = connect(host=ds.host, port=ds.port)
     cur = conn.cursor()
     sql = 'show databases'
     #sql = 'show create table f_fp_nsr_yue'
@@ -32,15 +32,14 @@ def showDatabases():
     
     arr = []
     for row in rows:
-        msg = row[0]
-        arr.append(dict(name=msg))
+        arr.append(dict(name=row[0], comment=row[1]))
     
     cur.close()
     conn.close()
 
     return arr
-def showTables():
-    conn = connect(host='10.10.8.102', database='fdm_db', port=21050)
+def showTables(ds):
+    conn = connect(host=ds.host, database=ds.database, port=ds.port)
     cur = conn.cursor()
     sql = 'show tables'
     #sql = 'show create table f_fp_nsr_yue'
