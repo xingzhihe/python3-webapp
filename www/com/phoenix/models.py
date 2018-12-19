@@ -5,8 +5,8 @@ __author__ = 'zhihe xing'
 
 import time
 
-from orm import Model, StringField, BooleanField, FloatField, TextField, IntegerField
-from common import next_id
+from com.phoenix.orm import Model, StringField, BooleanField, FloatField, TextField, IntegerField
+from com.phoenix.common import next_id
 
 class User(Model):
     __table__ = 'users'
@@ -59,6 +59,10 @@ class DataSource(Model):
         return '%s://%s:%d/%s' % (self.db_type, self.host, self.port, self.database)
     
     def show_Tables(self):
+        connString = '%s://%s:%d/%s' % (self.db_type, self.host, self.port, self.database)
+        return connString
+    
+    def get_Connection(self):
         connString = '%s://%s:%d/%s' % (self.db_type, self.host, self.port, self.database)
         return connString
 

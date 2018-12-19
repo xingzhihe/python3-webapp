@@ -7,10 +7,10 @@ __author__ = 'zhihe xing'
 
 from aiohttp import web
 from coroweb import get, post, put, delete
-from apis import Page, APIError, APIValueError, APIResourceNotFoundError, APIPermissionError
+from com.phoenix.apis import Page, APIError, APIValueError, APIResourceNotFoundError, APIPermissionError
 
-from models import DataSource
-from common import get_page_index
+from com.phoenix.models import DataSource
+from com.phoenix.common import get_page_index
 
 @get('/api/datasources')
 async def api_datasource_findAll(*, page='1'):
@@ -55,14 +55,20 @@ async def api_datasource_delete(request, *, id):
 @get('/api/datasources/{id}/databases')
 async def api_datasource_databases(*, id):
     ds = await DataSource.find(id)
-    from impalaConnection import showDatabases
-    databses = showDatabases(ds)
+    #from impalaConnection import ImpalaConnection
+    #conn = ImpalaConnection(ds)
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(ds)
+    databses = conn.showDatabases()
     return dict(databses=databses)
 
 @get('/api/datasources/{id}/databases/{db}/tables')
 async def api_datasource_tables(*, id, db):
     ds = await DataSource.find(id)
     ds['database'] = db
-    from impalaConnection import showTables
-    tables = showTables(ds)
+    #from impalaConnection import ImpalaConnection
+    #conn = ImpalaConnection(ds)
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(ds)
+    tables = conn.showTables()
     return dict(tables=tables)

@@ -7,7 +7,7 @@ Configuration
 
 __author__ = 'zhihe xing'
 
-import config_default
+import com.phoenix.config_default as config_default
 
 class Dict(dict):
     '''
@@ -48,7 +48,7 @@ def toDict(d):
 configs = config_default.configs
 
 try:
-    import config_override
+    import com.phoenix.config_override as config_override
     configs = merge(configs, config_override.configs)
 except ImportError:
     pass

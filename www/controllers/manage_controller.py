@@ -6,7 +6,7 @@ __author__ = 'zhihe xing'
 ' manage_controller handlers '
 
 from coroweb import get, post
-from common import get_page_index
+from com.phoenix.common import get_page_index
 
 @get('/manage')
 def manage():
