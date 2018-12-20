@@ -1,0 +1,483 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<base target="_self">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"> 
+	<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+	<META HTTP-EQUIV="expires" CONTENT="0">
+<meta name="viewport" content="width=device-width" />
+<meta name="keywords" content="" />
+<meta name="description" content="A jQuery plugin to add qr codes to your pages" />
+<title>国家税务总局全国增值税发票查验平台</title>
+
+<link rel="stylesheet" type="text/css" href="css/common.css">
+<link rel="stylesheet" type="text/css" href="css/jquery.alerts.css" media="screen">
+<style type="text/css" media="screen">
+  body { font-size: 12px;}
+  button {height: 40px;line-height: 40px;padding: 0 40px;-moz-border-radius: 2px;-webkit-border-radius: 2px;border-radius: 2px;font: normal 16px "MicroSoft YaHei", "SimSun";margin: 0 5px; border:0px;}
+  .gray_button {background: #ddd;color: #999;}
+  .white_button {background: #fff;}
+  .blue_button {background: #015293;color: #fff;}
+  .red_button {background: #fd983b;color: #fff;}
+  .green_button {background: #2ea0fb;color: #fff;}
+  .black_button {background: #e0e0e0;color: #555;}
+
+  input[type=text] {
+    width: 200px;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #444;
+    -webkit-transition: all linear .2s;
+    transition: all linear .2s;
+    border-radius: 4px;
+  }
+  .uk-form-row {
+    height: 50px;
+  }
+  .uk-form-row+.uk-form-row {
+    margin-top: 15px;
+  }
+  .uk-form-row >div{display: inline-block;}
+	.uk-form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+</style>
+<script src="js/jquery-1.10.2.min.js"></script>
+<script src="js/jquery.alerts.js"></script>
+<script src="js/showModalDialog.js"></script>
+<script src="js/validate.js"></script>
+<script src="js/m.q.d.min.js"></script>
+<script src="js/q.b.a.min.js"></script>
+<script src="js/s.d.b.min.js"></script>
+<script src="js/t.q.d.min.js"></script>
+<script src="js/t.q.e.min.js"></script>
+<script src="js/t.q.z.min.js"></script>
+<script src="js/eab23.js"></script>
+<script src="js/indexfunc.js"></script>
+<script src="js/90a1c.js"></script>
+<script language="javascript">
+  var yzmWait = 2;
+  var retrycount = 0;
+  var browser = "chrome";
+  $(document).ready(function() {
+      $("#fpdm").blur(function() {
+          retrycount = 0
+      })
+  });
+  function yzmTime(o) {
+      if (yzmWait == 0) {
+          $('#yzm_unuse_img').hide();
+          $('#yzm_img').show();
+          yzmWait = 60
+      } else {
+          if (yzmWait == 2) {
+              $('#yzm_unuse_img').show();
+              $('#yzm_img').hide()
+          }
+          yzmWait--;
+          setTimeout(function() {
+              yzmTime(o)
+          }, 1000)
+      }
+  }
+  function getYzmXx() {
+      show_yzm = "1";
+      var fpdm = $("#fpdm").val().trim();
+      var swjginfo = getSwjg(fpdm, 0);
+      var url = swjginfo[1] + "/yzmQuery";
+      var nowtime = showTime().toString();
+      var fpdmyzm = $("#fpdm").val().trim();
+      var fphmyzm = $("#fphm").val().trim();
+      var kjje = $("#kjje").val().trim();
+      var rad = Math.random();
+      var area = swjginfo[2];
+      var param = {
+          'fpdm': fpdmyzm,
+          'fphm': fphmyzm,
+          'r': rad,
+          'v': VVV,
+          'nowtime': nowtime,
+          'area': area,
+          'publickey': $.ckcode(fpdmyzm, nowtime)
+      };
+      $.ajaxSetup({
+          cache: false
+      });
+      yzmFlag = 1;
+      $.ajax({
+          type: "post",
+          url: url,
+          data: param,
+          dataType: "jsonp",
+          jsonp: "callback",
+          success: function(jsonData) {
+              delayFlag = "1";
+              var key1 = jsonData.key1;
+              var key2 = jsonData.key2;
+              var key3 = jsonData.key3;
+              var key4 = jsonData.key4;
+              var key5 = jsonData.key5;
+              if (key5 == "2") {
+                  oldweb = 2
+              } else if (key5 == "1") {
+                  oldweb = 1
+              }
+              if (key1 == "003") {
+                  jAlert("验证码请求次数过于频繁，请1分钟后再试！", "警告");
+                  $('#yzm_img').hide()
+              } else if (key1 == "005") {
+                  jAlert("非法请求!", "警告")
+              } else if (key1 == "010") {
+                  jAlert("网络超时，请重试！(01)", "警告")
+              } else if (key1 == "fpdmerr") {
+                  jAlert("请输入合法发票代码!", "警告")
+              } else if (key1 == "024") {
+                  jAlert("24小时内验证码请求太频繁，请稍后再试！", "警告");
+                  $('#yzm_img').hide()
+              } else if (key1 == "016") {
+                  jAlert("服务器接收的请求太频繁，请稍后再试！", "警告");
+                  $('#yzm_img').hide()
+              } else if (key1 == "020") {
+                  jAlert("由于查验行为异常，涉嫌违规，当前无法使用查验服务！", "提示")
+              } else if (key1 == "errv") {
+                  jAlert("当前页面版本较低，请按CTRL-F5刷新页面！", "提示")
+              } else if (key1 != "") {
+                  $("#yzm_img").attr("src", "data:image/png;base64," + key1);
+                  $("#yzm_unuse_img").attr("src", "data:image/png;base64," + key1);
+                  if (key4 == '00') {
+                      $("#yzminfo").text("请输入验证码文字")
+                  } else if (key4 == '01') {
+                      $("#yzminfo").html("请输入验证码图片中<font color=\"red\" size=\"3\" style=\"background:#C0C0C0\">红色</font>文字")
+                  } else if (key4 == '02') {
+                      $("#yzminfo").html("请输入验证码图片中<font color=\"yellow\" size=\"3\" style=\"background:#C0C0C0\">黄色</font>文字")
+                  } else if (key4 == '03') {
+                      $("#yzminfo").html("请输入验证码图片中<font color=\"blue\" size=\"3\" style=\"background:#C0C0C0\">蓝色</font>文字")
+                  }
+                  yzmSj = key2;
+                  jmmy = key3
+              }
+          },
+          timeout: 5000,
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+              if (retrycount == 9) {
+                  jAlert("系统繁忙，请稍后重试!", "提示")
+              } else {
+                  retrycount = retrycount + 1;
+                  getYzmXx()
+              }
+          }
+      });
+      yzmWait = 2;
+      yzmTime($('#yzm_img'))
+  }
+
+  function showTime() {
+      var myDate = new Date();
+      var time = myDate.getTime();
+      return time
+  }
+
+  function ckdm(fpdm) {
+      if (fpdm.length == 10 || fpdm.length == 12) {
+          var c = /^[0-9]*$/;
+          var f = c.test(fpdm);
+          if (f == false) {
+              return false
+          } else {
+              var swjginfo = getSwjg(fpdm, 0);
+              if (swjginfo.length == 0) {
+                  return false
+              } else {
+                  if (!adm(fpdm) || swjginfo.length == 0) {
+                      return false
+                  } else {
+                      return true
+                  }
+              }
+          }
+      } else {
+          return false
+      }
+  }
+
+  $(function () {
+    $("#yzm_img").click(function() {
+        var fpdm = $("#fpdm").val().trim();
+        var fphm = $("#fphm").val().trim();
+        if (fpdm == "" || fphm == "") {
+            jAlert('请先输入发票代码及发票号码!', '提示')
+        } else {
+            if (ckdm(fpdm) && ahm(fphm)) {
+                getYzmXx()
+            } else {
+                jAlert('请输入正确发票代码及发票号码!', '提示')
+            }
+        }
+    });
+
+    $("#checkfp").click(function() {
+        var fpdm = $("#fpdm").val().trim();
+        var fphm = $("#fphm").val().trim();
+        var kprq = $("#kprq").val().trim();
+        var dmchek = getSwjg(fpdm, 1);
+        var area = dmchek[2];
+        if (dmchek.length > 0) {
+            var DATE_FORMAT = /^[0-9]{4}[0-1]?[0-9]{1}[0-3]?[0-9]{1}$/;
+            if (DATE_FORMAT.test(kprq)) {} else {
+                jAlert("日期格式错误，为YYYYMMDD格式！", "提示");
+                return
+            }
+            var kjje = $("#kjje").val().trim();
+            if (aur()) {
+                $('#checkfp').hide();
+                $('#uncheckfp').show();
+                var date = new Date();
+                var yzm = $("#yzm").val().trim();
+                var setText = "";
+                var param = null;
+                var url = "";
+                if (avai(fplx)) {
+                    if (fplx == "01" || fplx == "02" || fplx == "03") {
+                        var index = kjje.indexOf(".");
+                        if (index > 0) {
+                            var arr = kjje.split(".");
+                            if (arr[1] == "00" || arr[1] == "0") {
+                                kjje = arr[0]
+                            } else if (arr[1].charAt(1) == "0") {
+                                kjje = arr[0] + "." + arr[1].charAt(0)
+                            }
+                        }
+                    }
+                    var sjip = dmchek[1];
+                    url = sjip + "/vatQuery";
+                    param = {
+                        'key1': fpdm,
+                        'key2': fphm,
+                        'key3': kprq,
+                        'key4': kjje,
+                        'fplx': fplx,
+                        'yzm': yzm,
+                        'yzmSj': yzmSj,
+                        'index': jmmy,
+                        'area': area,
+                        'publickey': $.ck(fpdm, fphm, kprq, kjje, yzmSj, yzm)
+                    };
+                    if (oldweb == 1) {
+                        url = sjip + "/invQuery";
+                        param = {
+                            'fpdm': fpdm,
+                            'fphm': fphm,
+                            'kprq': kprq,
+                            'fpje': kjje,
+                            'fplx': fplx,
+                            'yzm': yzm,
+                            'yzmSj': yzmSj,
+                            'index': jmmy,
+                            'area': area,
+                            'publickey': $.ck(fpdm, fphm, kprq, kjje, yzmSj, yzm)
+                        }
+                    }
+                    delayMessage = "发票查验请求失败!";
+                    showTime();
+                    $.ajax({
+                        type: "post",
+                        url: url,
+                        dataType: "jsonp",
+                        data: param,
+                        jsonp: "callback",
+                        success: function(jsonData) {
+                            delayFlag = "1";
+                            var cyjgdm = jsonData.key1;
+                            if (cyjgdm == "1") {
+                                show_yzm = "";
+                                jAlert("该省尚未开通发票查验功能！", "提示")
+                            } else if (cyjgdm == "001") {
+                                show_yzm = "";
+                                var key5 = jsonData.key5;
+                                var hwxx = jsonData.key3;
+                                var key2 = jsonData.key2;
+                                var bz = jsonData.key4.trim();
+                                if (key5 != "1") {
+                                    var signflag = $.vsign(fplx, fpdm, jsonData.key2, key5);
+                                    if (signflag) {
+                                        key2 = $.endetail(fplx, fpdm, $.deinv(fplx, fpdm, jsonData.key2));
+                                        hwxx = $.deinvkey(fplx, fpdm, jsonData.key3);
+                                        bz = $.deinvrm(fplx, fpdm, bz)
+                                    } else {
+                                        jAlert("系统异常，请重试！(07)", "系统错误");
+                                        return
+                                    }
+                                }
+                                if (browser == "edge" || browser == "firefox") {
+                                    show_dialog(1100, 700, "cyjgedge" + fplx + ".html", fpdm + '≡' + fphm + '≡' + swjgmc + '≡' + key2 + '≡' + yzmSj + '≡≡≡HWXX≡≡≡' + hwxx + '≡≡≡HWXX≡≡≡' + bz)
+                                } else if (browser == "ie8") {
+                                    sessionStorage["browser"] = "ie8";
+                                    var str = JSON.stringify(fpdm + '≡' + fphm + '≡' + swjgmc + '≡' + key2 + '≡' + yzmSj + '≡≡≡HWXX≡≡≡' + hwxx + '≡≡≡HWXX≡≡≡' + bz);
+                                    sessionStorage["result"] = str;
+                                    show_dialog(1100, 700, "cyjgedge" + fplx + ".html", fpdm + '≡' + fphm + '≡' + swjgmc + '≡' + key2 + '≡' + yzmSj + '≡≡≡HWXX≡≡≡' + hwxx + '≡≡≡HWXX≡≡≡' + bz)
+                                } else {
+                                    window.showModalDialog('cyjg' + fplx + '.html', fpdm + '≡' + fphm + '≡' + swjgmc + '≡' + key2 + '≡' + yzmSj + '≡≡≡HWXX≡≡≡' + hwxx + '≡≡≡HWXX≡≡≡' + bz, "dialogTop:10px;dialogWidth:1100px;dialogHeight:700px;")
+                                }
+                            } else if (cyjgdm == "002") {
+                                show_yzm = "";
+                                jAlert("超过该张发票当日查验次数(请于次日再次查验)!", "提示")
+                            } else if (cyjgdm == "003") {
+                                show_yzm = "";
+                                jAlert("发票查验请求太频繁，请稍后再试！", "提示")
+                            } else if (cyjgdm == "004") {
+                                show_yzm = "";
+                                jAlert("超过服务器最大请求数，请稍后访问!", "提示")
+                            } else if (cyjgdm == "005") {
+                                show_yzm = "";
+                                jAlert("请求不合法!", "提示")
+                            } else if (cyjgdm == "020") {
+                                show_yzm = "";
+                                jAlert("由于查验行为异常，涉嫌违规，当前无法使用查验服务！", "提示")
+                            } else if (cyjgdm == "006") {
+                                var key2222 = jsonData.key2;
+                                var key3333 = jsonData.key3;
+                                show_yzm = "";
+                                setText = "不一致";
+                                param = {
+                                    'fplx': fplx,
+                                    'swjg': swjgmc,
+                                    'fpdm': fpdm,
+                                    'fphm': fphm,
+                                    'kprq': kprq,
+                                    'kjje': kjje,
+                                    'cysj': yzmSj,
+                                    'setText': setText,
+                                    'key2222': key2222,
+                                    'key3333': key3333
+                                };
+                                if (browser == "edge" || browser == "firefox") {
+                                    show_dialog(800, 400, "jgbyz.html", param)
+                                } else {
+                                    window.showModalDialog('jgbyz.html', param, "dialogWidth:800px;dialogHeight:400px;center:yes;scroll:no")
+                                }
+                            } else if (cyjgdm == "007") {
+                                show_yzm = "";
+                                jAlert("验证码失效!", "提示")
+                            } else if (cyjgdm == "008") {
+                                show_yzm = "";
+                                jAlert("验证码错误!", "提示")
+                            } else if (cyjgdm == "009") {
+                                var key2222 = jsonData.key2;
+                                var key3333 = jsonData.key3;
+                                show_yzm = "";
+                                setText = "查无此票";
+                                param = {
+                                    'fplx': fplx,
+                                    'swjg': swjgmc,
+                                    'fpdm': fpdm,
+                                    'fphm': fphm,
+                                    'kprq': kprq,
+                                    'kjje': kjje,
+                                    'cysj': yzmSj,
+                                    'setText': setText,
+                                    'key2222': key2222,
+                                    'key3333': key3333
+                                };
+                                if (browser == "edge" || browser == "firefox") {
+                                    show_dialog(800, 400, "jgbyz.html", param)
+                                } else {
+                                    window.showModalDialog('jgbyz.html', param, "dialogWidth:800px;dialogHeight:400px;center:yes;scroll:no")
+                                }
+                            } else if (cyjgdm == "rqerr") {
+                                show_yzm = "";
+                                jAlert("当日开具发票可于次日进行查验！", "警告")
+                            } else if (cyjgdm == "010") {
+                                show_yzm = "";
+                                var etype = jsonData.key2;
+                                if (etype == 'inredis') {
+                                    etype = "(02)"
+                                } else if (etype == 'weberr') {
+                                    etype = "(03)"
+                                }
+                                jAlert("系统异常，请重试！" + etype, "系统错误")
+                            } else if (cyjgdm == "010_") {
+                                show_yzm = "";
+                                jAlert("系统异常，请重试！(05)", "系统错误")
+                            } else if (key1 == "016") {
+                                show_yzm = "";
+                                jAlert("服务器接收的请求太频繁，请稍后再试！", "警告")
+                            } else {
+                                show_yzm = "";
+                                jAlert("系统异常，请重试！(04)", "系统错误")
+                            }
+                            $('#uncheckfp').hide();
+                            $('#checkfp').show()
+                        },
+                        timeout: 30000,
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {}
+                    })
+                }
+            }
+        }
+    });
+  });
+</script>
+</head>
+
+<body >
+    <div class="uk-grid">
+      <div class="uk-container" style="margin:5px auto; width:500px;">
+          <div class="uk-width-2-3">
+              <!-- <form v-on="submit: submit" class="uk-form uk-form-stacked"> -->
+                  <div class="uk-alert uk-alert-danger uk-hidden"></div>
+                  <div class="uk-form-row">
+                      <label class="uk-form-label">发票代码:</label>
+                      <div class="uk-form-controls">
+                          <input v-model="fpdm" id="fpdm" name="fpdm" type="text" class="uk-width-1-1">
+                      </div>
+                      <div id="fpdmjy" class="tip_common_right">请输入发票号码</div>
+                  </div>
+                  <div class="uk-form-row">
+                      <label class="uk-form-label">发票号码:</label>
+                      <div class="uk-form-controls">
+                          <input v-model="fphm" id="fphm" name="fphm" type="text" class="uk-width-1-1">
+                      </div>
+                      <div id="fphmjy" class="tip_common_right">&nbsp;</div>
+                  </div>
+                  <div class="uk-form-row">
+                      <label class="uk-form-label">开票日期:</label>
+                      <div class="uk-form-controls">
+                          <input v-model="kprq" id="kprq" name="kprq" type="text" class="uk-width-1-1">
+                      </div>
+                      <div id="kprqjy" class="tip_common_right">&nbsp;</div>
+                  </div>
+                  <div class="uk-form-row">
+                      <!-- <label class="uk-form-label">不含税金额:</label> -->
+                      <span id="context" class="uk-form-label">开具金额(不含税)：</span>
+                      <div class="uk-form-controls">
+                          <input v-model="kjje" id="kjje" name="je" type="text" class="uk-width-1-1">
+                      </div>
+                      <div id="kjjejy" class="tip_common_right">&nbsp;</div>
+                  </div>
+                  <div class="uk-form-row">
+                      <label class="uk-form-label">验证码:</label>
+                      <div class="uk-form-controls">
+                          <input v-model="captcha" id="yzm" name="yzm" type="text" placeholder="yzm" class="uk-width-1-2">
+                          <span id="yzminfo" style="font-size: 12px;"></span>
+                          <img width="120" height="50" src="images/code.png" id="yzm_img" style="cursor: pointer; vertical-align:top;">
+                          <img width="120" height="50" src="images/code.png" id="yzm_unuse_img" style="cursor: pointer; vertical-align:top;display: none;">
+                          <span style="font-size: 12px;">点击图片刷新</span>
+                      </div>
+                  </div>
+                  <div class="uk-form-row" style="margin-top:80px;">
+                      <button class="gray_button" style="cursor: default; display: none;" id="uncheckfp" disabled="true">查 验</button>
+                      <button class="blue_button" onmousemove="this.className='green_button';" onmouseout="this.className='blue_button';" id="checkfp" style="display: inline-block;">查 验</button>
+                       &nbsp;&nbsp;&nbsp;&nbsp;
+                      <button class="blue_button" onmousemove="this.className='green_button';" onmouseout="this.className='blue_button';" id="reset">重 置</button>
+                  </div>
+              <!-- </form> -->
+          </div>
+      </div>
+    </div>
+</body>
+</html>

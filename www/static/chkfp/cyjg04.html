@@ -1,0 +1,250 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<base target="_self">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"> 
+	<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+	<META HTTP-EQUIV="expires" CONTENT="0">
+<meta name="viewport" content="width=device-width" />
+<meta name="keywords" content="" />
+<meta name="description" content="A jQuery plugin to add qr codes to your pages" />
+<title>国家税务总局全国增值税发票查验平台</title>
+<script language="javascript">
+    document.write("<l" + "ink rel='stylesheet' type='text/css' href='css/common.css?"+Math.random()+"' />");
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/jquery-1.10.2.min.js'></scr"+"ipt>"); 
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/jquery.PrintArea.js'></scr"+"ipt>"); 
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/result.js?"+Math.random()+"'></scr"+"ipt>"); 
+</script>
+<style type="text/css" media="screen">
+	.shuiyin {background:url(images/shuiyin.png) repeat; width:100%; position:absolute;left:0px; top:0px;z-index:1; }
+</style>
+<style type="text/css" media="print">
+	.shuiyin { width:100%; position:absolute;left:0px; top:0px;z-index:-1; }
+</style>
+</head>
+
+<body >
+
+ 
+<div id="content" class="clearfix">
+<a href="#" id="dialogclose">&times;</a>
+  
+  <div id="cms_r">
+    <div class="title">发票查验明细</div>
+    <div class="cms_r_main">
+      <div class="chayan_div">
+      <div id="print_area" class="printdiv" >
+        <table  border="1" class="comm_table2" width="100%" >
+          <tr>
+            <td colspan="4" style="background-color:#015293;color:#fff; line-height:40px;"><span id="cycs">查验次数：第1次</span>
+            <span style="padding-left:50px;" id="cysj">查验时间：2015-07-08 09:37:22</span>
+            <span style="float:right">
+            <button id="printfp" class="white_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='white_button';">打印</button><button id="closebt" class="white_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='white_button';">关闭</button></span>
+            </td>
+          </tr>
+        </table>
+      
+        <div id='bg_div' class="shuiyin"></div>
+          <div id="tabPage2" >
+
+            <div class="tab-page" id="tabPage-zzsptfp">
+              <h1 id="fpcc_pp" style="color:#015293;padding:5px 0px 5px 0px; text-align:center; position:relative"><strong>增值税普通发票</strong></h1>
+              <table border="0" cellpadding="0" cellspacing="0" style="width:100%" >
+                <tr height="30">
+                 <td class="align_left">发票代码：<span class="content_td_blue" id="fpdm_pp"></span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">发票号码：<span class="content_td_blue" id="fphm_pp"></span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">开票日期：<span class="content_td_blue" id="kprq_pp"></span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">校验码：<span class="content_td_blue" id="jym_pp"></span></td>
+                  <td>&nbsp;</td>                
+                  <td class="align_left" id="jqxx_pp" style="display:none">机器编号：<span class="content_td_blue" id="jqbh_pp"></span></td>
+                  <td>&nbsp;</td>
+                </tr>
+              </table>
+              <table style="width:100%" border="0" cellspacing="0" cellpadding="0" class="fppy_table">
+              <tr>
+                <td rowspan="4" class="align_center" width="20"><p>购</p>
+                <p>买</p>
+                <p>方</p></td>
+                <td class="align_left borderNo" width="105">名称：</td>
+                <td  nowrap class="align_left borderNo bgcolorWhite"><span class="content_td_blue" id="gfmc_pp"></span></td>
+                <td rowspan="4" class="align_center" width="20"> <p>密</p>
+                <p>码</p>
+                <p>区</p></td>
+                <td rowspan="4" nowrap class="align_center" width="250" id="password_pp">&nbsp;</td>        
+                </tr>
+                <tr >
+                  <td class="align_left borderNo">纳税人识别号：</td>
+                  <td  nowrap class="align_left borderNo"><span class="content_td_blue" id="gfsbh_pp"></span></td>
+                </tr>
+                <tr>
+                  <td class="align_left borderNo" valign="top">地址、电话：</td>
+                  <td   class="align_left borderNo" valign="top"><span class="content_td_blue" id="gfdzdh_pp"> </span></td>
+                </tr>
+                <tr>
+                  <td class="align_left borderNo" valign="top">开户行及账号：</td>
+                  <td   class="align_left borderNo" valign="top"><span class="content_td_blue" id="gfyhzh_pp"></span></td>
+                </tr>
+                 
+                <tr>
+                  <td colspan="5" ><table cellspacing="0" cellpadding="0" style="width:100%;" class="fppy_table_box">
+                    <tr id="tab_head_pp">
+                      <td class="align_center borderRight" width="30%">货物或应税劳务、服务名称</td>
+                      <td class="align_center borderRight" width="10%">规格型号</td>
+                      <td class="align_center borderRight" width="5%">单位</td>
+                      <td class="align_center borderRight" width="10%">数量</td>
+                      <td class="align_center borderRight" width="10%">单价</td>
+                      <td class="align_center borderRight" width="15%">金额</td>
+                      <td class="align_center borderRight" width="5%">税率</td>
+                      <td class="align_center" width="15%">税额</td>
+                    </tr>
+                    <tr >
+                      <td class="align_center borderRight">合计</td>
+                      <td class="align_center borderRight">&nbsp;</td>
+                      <td class="align_center borderRight">&nbsp;</td>
+                      <td class="align_center borderRight">&nbsp;</td>
+                      <td class="align_center borderRight">&nbsp;</td>
+                      <td class="align_right borderRight"><span class="content_td_blue" id="je_pp"></span></td>
+                      <td class="align_center borderRight">&nbsp;</td>
+                      <td class="align_right"><span class="content_td_blue" id="se_pp"></span></td>
+                    </tr>
+                    <tr >
+                      <td class="align_center borderRight borderTop" >价税合计（大写）</td>
+                      <td colspan="4" class="align_left borderTop" ><span class="align_left"><span class="content_td_blue" id="jshjdx_pp">&otimes;</span></td>
+					  <td colspan="3" class="align_left borderTop" ><span style="padding:0 20px;">（小写）</span><span class="content_td_blue" id="jshjxx_pp"></span></span></td>
+                    </tr>
+                  </table></td>
+                </tr> 
+                <tr>
+                  <td rowspan="4" class="align_center"><p>销</p>
+                  <p>售</p>
+                  <p>方</td>
+                  <td class="align_left borderNo">名称：</td>
+                  <td class="align_left borderNo"><span class="content_td_blue" id="xfmc_pp"></span></td>
+                  <td rowspan="4" class="align_center" width="20"><p>备</p>
+                  <p>注</p></td>
+                  <td rowspan="4" class="align_left content_td_blue" width="350" id="bz_pp" valign="top">&nbsp;</td>
+                </tr>
+                <tr >
+                  <td class="align_left borderNo">纳税人识别号：</td>
+                  <td class="align_left borderNo"><span class="content_td_blue" id="xfsbh_pp"></span></td>
+                </tr>
+                <tr>
+                  <td class="align_left borderNo">地址、电话：</td>
+                  <td class="align_left borderNo"><span class="content_td_blue" id="xfdzdh_pp"></span></td>
+                </tr>
+                <tr>
+                  <td class="align_left borderNo">开户行及账号：</td>
+                  <td class="align_left borderNo"><span class="content_td_blue" id="xfyhzh_pp" valign="top"></span></td>
+                </tr>
+              </table>
+              
+            </div>
+
+          </div> 
+        <div id="icon_zf" style="position:absolute;top:0px;left:0px;display:none;"><img src="images/icon_zf.png" /></div>
+      </div>
+
+         <div style="padding:30px 35px 0px 0px; color:#da534f; font-size:14px; line-height:25px;">
+          <strong>特别提示：</strong>
+            <br />&raquo;&nbsp;&nbsp;本平台仅提供所查询发票票面信息的查验结果。
+            <br />&raquo;&nbsp;&nbsp;若发现发票查验结果与实际交易不符，任何单位或个人有权拒收并向当地税务机关举报。
+        </div>
+        
+      </div>
+      
+    </div>
+  </div>
+
+</div> 
+
+<script type="text/javascript">
+document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/cyjg/04.js'></scr"+"ipt>"); 
+</script>
+<div id="hwmxqd" style="padding:10px;position:absolute;width:1000px;border:1px solid #ccc;background:#fff;  display:none;">
+
+<div id="print_areamx" >
+
+
+<h1 id="fpcc_zp" style="color:#574B9D;padding:5px 0px 15px 0px; text-align:center;"><strong>销 售 货 物 或 提 供 应 税 劳 务 清 单</strong></h1>
+<table border="0" cellpadding="0" cellspacing="0" style="width:100%" >
+<tr height="30">                  
+  <td class="align_left" colspan="3">购买方名称：<span class="content_td_blue" id="fpmx_gfmc"></span></td>
+</tr>
+<tr height="30">                  
+  <td class="align_left" colspan="3">销售方名称：<span class="content_td_blue" id="fpmx_xfmc"></span></td>
+</tr>
+<tr height="30">                  
+  <td class="align_left"><span id="fpmx_fpdminfo">所属增值税普通发票代码：</span><span class="content_td_blue" id="fpmx_fpdm"></span></td>
+  <td class="align_left">号码：<span class="content_td_blue" id="fpmx_fphm"></span></td>
+  <td class="align_right">共1页 第1页</td>
+  <td> &nbsp;</td>
+</tr>
+</table>
+<table style="width:100%" border="0" cellspacing="0" cellpadding="0" class="fppy_table">
+	<tr id="tab_head_mx">
+	  <td width="40"> 序号</td>
+	  <td width="240">货物（劳务）名称</td>
+	  <td width="100">规格型号</td>
+	  <td width="60"> 单位</td>
+	  <td width="100">数量</td>
+	  <td width="100">单价</td>
+	  <td width="100">金额</td>
+	  <td width="60"> 税率</td>
+	  <td width="100">税额</td>
+	</tr>
+    <tr>
+	  <td width="60"  class="borderHaveTop"> 小计</td>
+	  <td width="240" class="borderHaveTop align_left"></td>
+	  <td width="100" class="borderHaveTop"></td>
+	  <td width="60"  class="borderHaveTop"></td>
+	  <td width="100" class="borderHaveTop align_right"></td>
+	  <td width="100" class="borderHaveTop align_right"></td>
+	  <td width="100" class="borderHaveTop align_right content_td_blue" id="xiaoji1"></td>
+	  <td width="40"  class="borderHaveTop"></td>
+	  <td width="100" class="borderHaveTop align_right content_td_blue" id="xiaoji2"></td>
+	</tr>
+    <tr>
+	  <td width="60"  class="borderBottomTopNo"> 总计</td>
+	  <td width="240" class="borderBottomTopNo align_left"></td>
+	  <td width="100" class="borderBottomTopNo"></td>
+	  <td width="60"  class="borderBottomTopNo"></td>
+	  <td width="100" class="borderBottomTopNo align_right"></td>
+	  <td width="100" class="borderBottomTopNo align_right"></td>
+	  <td width="100" class="borderBottomTopNo align_right content_td_blue" id="zongji1"></td>
+	  <td width="40"  class="borderBottomTopNo"></td>
+	  <td width="100" class="borderBottomTopNo align_right content_td_blue" id="zongji2"></td>
+	</tr>
+    <tr>
+	  <td class="borderTop">备注</td>
+	  <td class="borderTop align_left content_td_blue" colspan="8"></td>
+	</tr>
+</table>
+<br />
+<table border="0" cellpadding="0" cellspacing="0" style="width:100%" >
+<tr height="30">                  
+  <td class="align_left">销售方（章）：</td>
+  <td class="align_right">填开日期：<span class="content_td_blue" id="fpmx_kprq"></span></td>
+  <td>&nbsp;</td>
+</tr>
+</table>
+</div>
+<table border="0" cellpadding="0" cellspacing="0" style="width:100%" >
+	<tr id='goods'>
+		<td> &nbsp; </td>
+	</tr>
+	<tr>
+		<td style="text-align:center; height:60px;">
+			<button id="printfpmx" class="blue_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='blue_button';">打印</button><button id="mxclose" class="blue_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='blue_button';">关闭</button>
+		</td>
+	</tr>
+</table>
+
+
+</div>
+</body>
+</html>

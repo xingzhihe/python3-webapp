@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<base target="_self">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"> 
+	<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+	<META HTTP-EQUIV="expires" CONTENT="0">
+<meta name="viewport" content="width=device-width" />
+<meta name="keywords" content="" />
+<meta name="description" content="A jQuery plugin to add qr codes to your pages" />
+<title>国家税务总局全国增值税发票查验平台</title>
+<script language="javascript">
+    document.write("<l" + "ink rel='stylesheet' type='text/css' href='css/common.css?"+Math.random()+"' />");
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/jquery-1.10.2.min.js'></scr"+"ipt>"); 
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/jquery.PrintArea.js'></scr"+"ipt>"); 
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/result.js?"+Math.random()+"'></scr"+"ipt>"); 
+</script>
+<style type="text/css" media="screen">
+	.shuiyin {background:url(images/shuiyin.png) repeat; width:100%; position:absolute;left:0px; top:0px;z-index:1; }
+</style>
+<style type="text/css" media="print">
+	.shuiyin { width:100%; position:absolute;left:0px; top:0px;z-index:-1; }
+</style>
+</head>
+
+<body >
+ 
+<div id="content" class="clearfix">
+<a href="#" id="dialogclose">&times;</a>
+  
+  <div id="cms_r">
+    <div class="title">发票查验明细</div>
+    <div class="cms_r_main">
+      <div class="chayan_div">
+      <div id="print_area" class="printdiv" >
+        <table  border="1" class="comm_table2" width="100%" >
+          <tr>
+            <td colspan="4" style="background-color:#015293;color:#fff; line-height:40px;"><span id="cycs">查验次数：第1次</span>
+            <span style="padding-left:50px;" id="cysj">查验时间：2015-07-08 09:37:22</span>
+            <span style="float:right">
+            <button id="printfp" class="white_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='white_button';">打印</button><button id="closebt" class="white_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='white_button';">关闭</button></span>
+            </td>
+          </tr>
+        </table>
+         
+        <div id='bg_div' class="shuiyin"></div>
+          <div id="tabPage2" >
+
+            <div class="tab-page" id="tabPage-escfp">
+              <h1 id="fpcc_escfp" style="color:#015293;padding:5px 0px 5px 0px; text-align:center;"><strong>二手车销售统一发票</strong></h1>
+              <table border="0" cellpadding="0" cellspacing="0" style="width:100%" >
+                <tr height="30">                  
+                  <td class="align_left">发票代码：<span class="content_td_blue" id="fpdm_escfp"></span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">发票号码：<span class="content_td_blue" id="fphm_escfp"></span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">开票日期：<span class="content_td_blue" id="kprq_escfp"> </span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">&nbsp;</td>
+                  <td>&nbsp;</td>
+                </tr>
+              </table>
+			 <table style="width:100%" border="0" cellspacing="0" cellpadding="0" class="fppy_table">
+			  <tr> 
+				<td width="15%" class="align_center" >
+				  <p style="width: 99px;">机 打 代 码</p>
+				  <p style="width: 99px;">机 打 号 码</p>
+				  <p style="width: 99px;">机 器 编 号</p></td>
+				<td colspan="2" nowrap class="align_left"><p class="content_td_blue" id="jddm_escfp">&nbsp;</p>
+				  <p class="content_td_blue" id="jdhm_escfp">&nbsp;</p>
+				  <p class="content_td_blue" id="jqbm_escfp">&nbsp;</p></td>
+				<td width="5%" class="align_center" > <p>税</p>
+				  <p>控</p>
+				  <p>码</p></td>
+				<td width="12%" colspan="6"  class="align_center" id="skm_escfp">&nbsp;</td>
+			  </tr>
+			  <tr > 
+				<td class="align_center" >买方单位/个人</td>
+				<td colspan="3" class="align_left content_td_blue" id="mfmc_escfp">&nbsp;</td>
+				<td width="12%" class="align_center">单位代码/身份证号码</td>
+				<td colspan="4" class="align_left content_td_blue" id="mfdm_escfp">&nbsp;</td>
+			  </tr>
+			  <tr > 
+				<td class="align_center" >买方单位/个人住址</td>
+				<td colspan="4" class="align_left content_td_blue" id="mfdz_escfp">&nbsp;</td>
+				<td colspan="3" class="align_left">电话</td>
+				<td width="27%" class="align_left content_td_blue" id="mfdh_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center"><p>卖方单位/个人</p></td>
+				<td colspan="3" class="align_left content_td_blue" id="xfmc_escfp">&nbsp;</td>
+				<td nowrap class="align_left">单位代码/身份证号码</td>
+				<td colspan="4" nowrap class="align_left content_td_blue" id="xfdm_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">卖方单位/个人住址</td>
+				<td colspan="4" class="align_left content_td_blue" id="xfdz_escfp">&nbsp;</td>
+				<td colspan="3" nowrap class="align_left">电话</td>
+				<td nowrap class="align_left content_td_blue" id="xfdh_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">车牌照号</td>
+				<td width="19%" nowrap class="align_left content_td_blue" id="cpzh_escfp">&nbsp;</td>
+				<td width="9%" nowrap class="align_center">登记证号</td>
+				<td colspan="2" nowrap class="align_left content_td_blue" id="djzhm_escfp">&nbsp;</td>
+				<td colspan="3" nowrap class="align_center">车辆类型</td>
+				<td nowrap class="align_left content_td_blue" id="cllx_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">车架号/车辆识别代码</td>
+				<td nowrap class="align_left content_td_blue" id="clsbdm_escfp">&nbsp;</td>
+				<td nowrap class="align_center">厂牌型号</td>
+				<td colspan="2" nowrap class="align_left content_td_blue" id="cpxh_escfp">&nbsp;</td>
+				<td colspan="3" nowrap class="align_center">转入地车辆管理所名称</td>
+				<td nowrap class="align_left content_td_blue" id="zrcgs_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">车价合计（大写）</td>
+				<td colspan="4" nowrap class="align_left"><span class="content_td_blue align_left" id="cjhjdx_escfp"></span></td>
+				<td colspan="3" nowrap class="align_right">小写</td>
+				<td nowrap class="align_right content_td_blue" id="cjhjxx_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">经营、拍卖单位</td>
+				<td colspan="8" nowrap class="align_left content_td_blue" id="jydw_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">经营、拍卖单位地址</td>
+				<td colspan="3" class="align_left content_td_blue" id="jydwdz_escfp">&nbsp;</td>
+				<td class="align_center">纳税人识别号</td>
+				<td colspan="4" class="align_left content_td_blue" id="jydwsbh_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">开户银行、账号</td>
+				<td colspan="4"  class="align_left content_td_blue" id="jydwyh_escfp"> </td>
+				<td colspan="3"  class="align_left">电话</td>
+				<td  class="align_left content_td_blue" id="jydwdh_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td rowspan="2" class="align_center">二手车市场</td>
+				<td colspan="3" rowspan="2"  class="align_left content_td_blue" id="escsc_escfp">&nbsp;</td>
+				<td  class="align_left">纳税人识别号</td>
+				<td colspan="4"  class="align_left content_td_blue" id="escscsbh_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td  class="align_left">地址</td>
+				<td colspan="4"  class="align_left content_td_blue" id="escscdz_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">开户银行、账号</td>
+				<td colspan="4"  class="align_left content_td_blue" id="escscyh_escfp"> </td>
+				<td colspan="3"  class="align_left">电话</td>
+				<td  class="align_left content_td_blue" id="escscdh_escfp">&nbsp;</td>
+			  </tr>
+			  <tr> 
+				<td class="align_center">备注</td>
+				<td colspan="8"  class="align_left content_td_blue" id="bz_escfp">&nbsp;</td>
+			  </tr> 
+			</table>              
+            </div>
+
+          </div> 
+        <div id="icon_zf" style="position:absolute;top:0px;left:0px;display:none;"><img src="images/icon_zf.png" /></div>
+      </div>
+
+         <div style="padding:30px 35px 0px 0px; color:#da534f; font-size:14px; line-height:25px;">
+          <strong>特别提示：</strong>
+            <br />&raquo;&nbsp;&nbsp;本平台仅提供所查询发票票面信息的查验结果。
+            <br />&raquo;&nbsp;&nbsp;若发现发票查验结果与实际交易不符，任何单位或个人有权拒收并向当地税务机关举报。
+        </div>
+        
+      </div>
+      
+    </div>
+  </div>
+
+</div> 
+
+<script type="text/javascript">
+document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/cyjg/15.js'></scr"+"ipt>"); 
+</script>
+<area href="/pepp4_thunder" style="display:none" /></body>
+</html>

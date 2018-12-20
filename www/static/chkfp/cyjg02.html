@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<base target="_self">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<META HTTP-EQUIV="pragma" CONTENT="no-cache"> 
+	<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate"> 
+	<META HTTP-EQUIV="expires" CONTENT="0">
+<meta name="viewport" content="width=device-width" />
+<meta name="keywords" content="" />
+<meta name="description" content="A jQuery plugin to add qr codes to your pages" />
+<title>国家税务总局全国增值税发票查验平台</title>
+<script language="javascript">
+    document.write("<l" + "ink rel='stylesheet' type='text/css' href='css/common.css?"+Math.random()+"' />");
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/jquery-1.10.2.min.js'></scr"+"ipt>"); 
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/jquery.PrintArea.js'></scr"+"ipt>"); 
+  document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/result.js?"+Math.random()+"'></scr"+"ipt>"); 
+</script>
+<style type="text/css" media="screen">
+	.shuiyin {background:url(images/shuiyin.png) repeat; width:100%; position:absolute;left:0px; top:0px;z-index:1; }
+</style>
+<style type="text/css" media="print">
+	.shuiyin { width:100%; position:absolute;left:0px; top:0px;z-index:-1; }
+</style>
+</head>
+
+<body >
+
+ 
+<div id="content" class="clearfix">
+<a href="#" id="dialogclose">&times;</a>
+  
+  <div id="cms_r">
+    <div class="title">发票查验明细</div>
+    <div class="cms_r_main">
+      <div class="chayan_div">
+      <div id="print_area" class="printdiv" >
+        <table  border="1" class="comm_table2" width="100%" >
+          <tr>
+            <td colspan="4" style="background-color:#015293;color:#fff; line-height:40px;"><span id="cycs">查验次数：第1次</span>
+            <span style="padding-left:50px;" id="cysj">查验时间：2015-07-08 09:37:22</span>
+            <span style="float:right">
+            <button id="printfp" class="white_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='white_button';">打印</button><button id="closebt" class="white_button" style="position:relative!important;z-index:100" onmousemove="this.className='green_button';" onmouseout="this.className='white_button';">关闭</button></span>
+            </td>
+          </tr>
+        </table>
+        
+        <div id='bg_div' class="shuiyin"></div>
+          <div id="tabPage2" >
+
+            <div class="tab-page" id="tabPage-hyzp">
+              <h1 id="fpcc_hyzp" style="color:#015293;padding:5px 0px 5px 0px; text-align:center;"><strong>货物运输业增值税专用发票</strong></h1>
+              <table border="0" cellpadding="0" cellspacing="0" style="width:100%" >
+                <tr height="30">                 
+                  <td class="align_left">发票代码：<span class="content_td_blue" id="fpdm_hyzp"></span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">发票号码：<span class="content_td_blue"  id="fphm_hyzp"></span></td>
+                  <td>&nbsp;</td>
+                   <td class="align_left">开票日期：<span class="content_td_blue" id="kprq_hyzp"></span></td>
+                  <td>&nbsp;</td>
+                  <td class="align_left">&nbsp;</td>
+                  <td>&nbsp;</td>
+                </tr>
+              </table>
+              <table style="width:100%" border="0" cellspacing="0" cellpadding="0" class="fppy_table">
+              <tr>
+                <td colspan="2" class="align_center" width="15%"><p>承运人及</p>
+                  <p>纳税人识别号</p></td>
+                <td colspan="4" nowrap class="align_left"><p class="content_td_blue" id="cyrmc_hyzp"></p>
+                  <p class="content_td_blue" id="cyrsbh_hyzp"></p></td>
+                <td rowspan="2" class="align_center" width="3%"> <p>密</p>
+                <p>码</p>
+                <p>区</p>
+                <td colspan="6" rowspan="2" class="align_center" id="password_hyzp">&nbsp;</td> 
+                </tr>
+                <tr >
+                  <td colspan="2" class="align_center" ><p>实际受票方及</p>
+                    <p>纳税人识别号</p></td>
+                  <td colspan="4" nowrap class="align_left"><p class="content_td_blue" id="spfmc_hyzp"></p>
+                  <p class="content_td_blue" id="spfsbh_hyzp"></p></td>
+                  </tr>
+                <tr>
+                  <td colspan="2" class="align_center"><p>收货人及</p>
+                    <p>纳税人识别号</p></td>
+                  <td colspan="4" nowrap class="align_left"><p class="content_td_blue" id="shrmc_hyzp"></p>
+                  <p class="content_td_blue" id="shrsbh_hyzp"></p></td>
+                  <td colspan="2" class="align_center" width="15%"><p>发货人及</p>
+                    <p>纳税人识别号</p></td>
+                  <td colspan="4" class="align_left"><p class="content_td_blue" id="fhrmc_hyzp"></p>
+                  <p class="content_td_blue" id="fhrsbh_hyzp"></p></td>
+                  </tr>
+                <tr>
+                  <td colspan="3" class="align_center">起运地、经由、到达地</td>
+                  <td colspan="9" nowrap class="align_left content_td_blue" id="qyd_hyzp">&nbsp; </td>
+                  </tr>
+                <tr>
+                  <td class="align_center" width="3%"><p>费</p>
+                    <p>用</p>
+                    <p>项</p>
+                    <p>目</p>
+                    <p>及</p>
+                    <p>金</p>
+                    <p>额</p></td>
+                  <td colspan="8" valign="top">
+                  <table cellspacing="0" cellpadding="0" style="width:50%;float:left" class="fppy_table_box">
+                    <tr id="tab_head1_hyzp" style="height:30px">
+                      <td class="align_center" >费用项目</td>
+                      <td class="align_center" >金额</td>
+					  <td class="align_center" width="20" >&nbsp;</td>
+                    </tr>
+                  </table>
+                    <table cellspacing="0" cellpadding="0" style="width:50%; float:right" class="fppy_table_box">
+                      <tr id="tab_head2_hyzp" style="height:30px">
+                        <td class="align_center" >费用项目</td>
+                        <td class="align_center" >金额</td>
+						<td class="align_center" width="20" >&nbsp;</td>
+                      </tr>
+                    </table>
+                    
+                  </td>
+                  <td class="align_center" width="1%"><p>运</p>
+                    <p>输</p>
+                    <p>货</p>
+                    <p>物</p>
+                    <p>信</p>
+                    <p>息</p></td>
+                  <td colspan="2" class="align_left content_td_blue" id="yshwxx_hyzp" valign="top">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td colspan="2" class="align_center" >合计金额</td>
+                  <td colspan="2" nowrap class="align_left" width="20%"><span class="content_td_blue" id="hjje_hyzp"></span></td>
+                  <td nowrap class="align_center" width="10%">税率</td>
+                  <td colspan="2" nowrap class="align_center" width="10%"><span class="content_td_blue" id="sl_hyzp"></span></td>
+                  <td class="align_center" width="10%">税额</td>
+                  <td colspan="2" class="align_left" width="10%"><span class="content_td_blue" id="se_hyzp"></span></td>
+                  <td class="align_center" width="10%">机器编号</td>
+                  <td class="align_center" width="20%"><span class="content_td_blue" id="skph_hyzp"> </span></td>
+                </tr>
+                <tr>
+                  <td colspan="2" class="align_center" >价税合计(大写)</td>
+                  <td colspan="7" nowrap class="align_left borderLeft" ><span class="content_td_blue" id="jshjdx_hyzp"></span></td>
+				  <td colspan="3" nowrap class="align_left borderRight" ><span style="padding:0 20px;">（小写）</span><span class="content_td_blue" id="jshjxx_hyzp"></span></td>
+                  </tr>
+                <tr>
+                  <td colspan="2" class="align_center">车种车号</td>
+                  <td colspan="2" nowrap class="align_center content_td_blue" id="czch_hyzp">&nbsp;</td>
+                  <td nowrap class="align_center">车船吨位</td>
+                  <td nowrap class="align_center content_td_blue" id="ccdw_hyzp">&nbsp;</td>
+                  <td rowspan="2" class="align_center" width="3%"><p>备</p>
+                    <p>注</p></td>
+                  <td colspan="5" rowspan="2" class="align_left content_td_blue" id="bz_hyzp" valign="top">&nbsp;</td>
+                  </tr>
+                <tr>
+                  <td colspan="2" class="align_center"><p>主管税务机关</p>
+                    <p>及代码</p></td>
+                  <td colspan="4" nowrap class="align_left"><p class="content_td_blue" id="swjg_mc_hyzp"></p>
+                    <p class="content_td_blue" id="swjg_dm_hyzp"></p></td>
+                </tr> 
+              </table>
+              
+            </div>
+
+          </div> 
+        <div id="icon_zf" style="position:absolute;top:0px;left:0px;display:none;"><img src="images/icon_zf.png" /></div>
+      </div>
+
+         <div style="padding:30px 35px 0px 0px; color:#da534f; font-size:14px; line-height:25px;">
+          <strong>特别提示：</strong>
+            <br />&raquo;&nbsp;&nbsp;本平台仅提供所查询发票票面信息的查验结果。
+            <br />&raquo;&nbsp;&nbsp;若发现发票查验结果与实际交易不符，任何单位或个人有权拒收并向当地税务机关举报。
+        </div>
+        
+      </div>
+      
+       
+      
+    </div>
+  </div>
+
+</div> 
+
+<script type="text/javascript">
+document.write("<s"+"cript charset='utf-8' type='text/javascript' src='js/cyjg/02.js'></scr"+"ipt>"); 
+</script>
+
+<area href="/pepp4_thunder" style="position:absolute;left:-3000px;" /></body>
+</html>

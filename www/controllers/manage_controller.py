@@ -55,3 +55,12 @@ def manage_metadata(*, page='1'):
         '__template__': 'metadata.html',
         'page_index': get_page_index(page)
     }
+
+
+@get('/manage/captcha')
+def manage_captcha(*, page='1'):
+    return {
+        '__template__': 'captcha.html',
+        'id': '',
+        'action': '/api/captcha'
+    }
