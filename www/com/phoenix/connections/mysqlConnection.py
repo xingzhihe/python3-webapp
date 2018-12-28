@@ -50,6 +50,17 @@ class MysqlConnection(object):
 
         return arr
 
+    def showFields(self,table):
+        arr = []
+        sql = "describe %s" % table
+        rows = self.execute(sql)        
+        for row in rows:
+            name = row[0]
+            data_type = row[1]
+            arr.append(dict(name=name, data_type=data_type))
+
+        return arr
+
 if __name__ == '__main__':
     print('作为主程序运行')
 else:

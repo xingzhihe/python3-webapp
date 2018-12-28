@@ -406,6 +406,77 @@ if (typeof(Vue)!=='undefined') {
                 '<li v-if="has_next"><a v-attr="onclick:\'gotoPage(\' + (page_index+1) + \')\'" href="#0"><i class="uk-icon-angle-double-right"></i></a></li>' +
             '</ul>'
     });
+
+    Vue.component('my-tree', {
+        template: '<ul class="tree">' + 
+            '<li v-repeat="ds: datasources">' + 
+                '<div>' +
+                    '<span class="icon"  v-on="click : load_databases($index,ds)">{{ ds.open ? "-":"+" }}</span>' + 
+                    '<span style="display:inline-block;">{{ ds.db_type + \' \' + ds.host + \':\' + ds.port }}</span>' + 
+                '</div>' + 
+
+                '<ul v-if="ds.open">' + 
+                    '<li v-repeat="db: ds.databases">' + 
+                        '<div>' +
+                            '<span class="icon" v-on="click : load_tables(ds,$index,db,$event)">{{ db.open ? "-":"+" }}</span>' + 
+                            '<span style="display:inline-block;">{{ db.name }}</span>' + 
+                        '</div>' + 
+
+                        '<ul v-if="db.open">' + 
+                            '<li v-repeat="dt: db.tables">' + 
+                                '<div>' +
+                                    '<span class="icon" v-on="click : load_fields(ds,db,$index,dt,$event)">{{ dt.open ? "-":"+" }}</span>' + 
+                                    '<span style="display:inline-block;">{{ dt.name }}</span>' + 
+                                '</div>' + 
+
+                                '<ul v-if="dt.open">' + 
+                                    '<li v-repeat="field: dt.fields">' + 
+                                        '<div>' +
+                                            '<span style="display:inline-block;">{{ field.name + "&nbsp;&nbsp;&nbsp;&nbsp;" + field.data_type }}</span>' + 
+                                        '</div>' + 
+                                    '</li>' +
+                                '</ul>' +
+
+                            '</li>' +
+                        '</ul>' +
+
+                    '</li>' +
+                '</ul>' +
+
+            '</li>' +
+        '</ul>',
+        methods: {
+            isFolder: function (ds) {
+                return ds.databases && ds.databases.length
+            },
+            load_databases: function (index,ds) {
+                ds.open = !ds.open;
+                if(!ds.databases){
+                    loadDatabases(index,ds);
+                }else{
+                    this.$data = this.$data;
+                }
+            },
+            load_tables: function (ds,index,db,evt) {
+                if(evt) evt.stopPropagation();
+                db.open = !db.open;
+                if(!db.tables){
+                    loadTables(ds,index,db);
+                }else{
+                    this.$data = this.$data;
+                }
+            },
+            load_fields: function (ds,db,index,table,evt) {
+                if(evt) evt.stopPropagation();
+                table.open = !table.open;
+                if(!table.fields){
+                    loadFields(ds,db,index,table);
+                }else{
+                    this.$data = this.$data;
+                }
+            }
+        }
+    });
 }
 
 function redirect(url) {

@@ -4,7 +4,7 @@ import os, sys
 
 def get_Connection(ds):
     if ds.db_type == "Impala" :
-        from impalaConnection  import ImpalaConnection
+        from com.phoenix.connections.impalaConnection  import ImpalaConnection
         conn = ImpalaConnection(ds)
     else:
         from com.phoenix.connections.mysqlConnection import MysqlConnection

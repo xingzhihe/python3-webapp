@@ -55,20 +55,25 @@ async def api_datasource_delete(request, *, id):
 @get('/api/datasources/{id}/databases')
 async def api_datasource_databases(*, id):
     ds = await DataSource.find(id)
-    #from impalaConnection import ImpalaConnection
-    #conn = ImpalaConnection(ds)
     from com.phoenix.connections.connectionFactory import get_Connection
     conn = get_Connection(ds)
-    databses = conn.showDatabases()
-    return dict(databses=databses)
+    databases = conn.showDatabases()
+    return dict(databases=databases)
 
 @get('/api/datasources/{id}/databases/{db}/tables')
 async def api_datasource_tables(*, id, db):
     ds = await DataSource.find(id)
     ds['database'] = db
-    #from impalaConnection import ImpalaConnection
-    #conn = ImpalaConnection(ds)
     from com.phoenix.connections.connectionFactory import get_Connection
     conn = get_Connection(ds)
     tables = conn.showTables()
     return dict(tables=tables)
+
+@get('/api/datasources/{id}/databases/{db}/tables/{table}/fields')
+async def api_datasource_fields(*, id, db, table):
+    ds = await DataSource.find(id)
+    ds['database'] = db
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(ds)
+    fields = conn.showFields(table)
+    return dict(fields=fields)

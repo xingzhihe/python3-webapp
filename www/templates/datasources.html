@@ -41,6 +41,8 @@
             $('#loading').hide();
             initVM(results);
         });
+        
+        new Vue({el: '#app'});
     });
 </script>
 
@@ -118,5 +120,10 @@
             </tbody>
         </table>
         <div v-component="pagination" v-with="page"></div>
+
+        <div id="app">
+            <!-- 3. #app是Vue实例挂载的元素，应该在挂载元素范围内使用组件-->
+            <my-component></my-component>
+        </div>
     </div>
 {% endblock %}
