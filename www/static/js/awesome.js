@@ -452,7 +452,11 @@ if (typeof(Vue)!=='undefined') {
             load_databases: function (index,ds) {
                 ds.open = !ds.open;
                 if(!ds.databases){
-                    loadDatabases(index,ds);
+                    if(ds.db_type=='Oracle'){
+                        loadUsers(index,ds);
+                    }else{
+                        loadDatabases(index,ds);
+                    }
                 }else{
                     this.$data = this.$data;
                 }

@@ -1,17 +1,14 @@
 ﻿#coding:utf-8
 #!/usr/bin/python 
 import os, sys
-import pymysql
+import cx_Oracle
 
-class MysqlConnection(object):
+class OracleConnection(object):
     def __init__(self, ds):
         self.ds = ds
     
     def execute(self, sql):
-        if self.ds.database :
-            conn = pymysql.connect(host=self.ds.host, user=self.ds.user, passwd=self.ds.password, db=self.ds.database, port=self.ds.port, charset='utf8')
-        else:
-            conn = pymysql.connect(host=self.ds.host, user=self.ds.user, passwd=self.ds.password, port=self.ds.port, charset='utf8')
+        conn = cx_Oracle.connect("%s/%s@%s:%s/%s" % (self.ds.user, self.ds.password, self.ds.host, self.ds.port, self.ds.database))
         cur = conn.cursor()
         cur.execute(sql)
         rows=cur.fetchall()
@@ -28,16 +25,26 @@ class MysqlConnection(object):
     
     def showDatabases(self):
         arr = []
-        sql = 'show databases'
+        sql = 'select name from v$database order by name'
         rows = self.execute(sql)
         for row in rows:
             arr.append(dict(name=row[0], comment=""))
         
         return arr
 
-    def showTables(self):
+    def showUsers(self):
         arr = []
-        sql = 'show tables'
+        sql = 'select username from all_users order by username'
+        rows = self.execute(sql)        
+        for row in rows:
+            userName = row[0]
+            arr.append(dict(name=userName))
+
+        return arr
+
+    def showTables(self, userName):
+        arr = []
+        sql = "select table_name from all_tables where owner='%s' order by table_name" % userName
         rows = self.execute(sql)        
         for row in rows:
             msg = row[0]
@@ -47,7 +54,8 @@ class MysqlConnection(object):
 
     def showFields(self,table):
         arr = []
-        sql = "describe %s" % table
+        paras = table.split('.')
+        sql = "select column_name, data_type from all_tab_columns where owner='%s' and table_name='%s' order by column_id" % (paras[0],paras[1])
         rows = self.execute(sql)        
         for row in rows:
             name = row[0]
@@ -59,4 +67,4 @@ class MysqlConnection(object):
 if __name__ == '__main__':
     print('作为主程序运行')
 else:
-    print('MysqlConnection 初始化')
+    print('OracleConnection 初始化')

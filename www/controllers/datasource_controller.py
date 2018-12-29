@@ -52,6 +52,14 @@ async def api_datasource_delete(request, *, id):
     await ds.remove()
     return dict(id=id)
 
+@get('/api/datasources/{id}/users')
+async def api_datasource_users(*, id):
+    ds = await DataSource.find(id)
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(ds)
+    databases = conn.showUsers()
+    return dict(databases=databases)
+
 @get('/api/datasources/{id}/databases')
 async def api_datasource_databases(*, id):
     ds = await DataSource.find(id)
@@ -63,16 +71,23 @@ async def api_datasource_databases(*, id):
 @get('/api/datasources/{id}/databases/{db}/tables')
 async def api_datasource_tables(*, id, db):
     ds = await DataSource.find(id)
-    ds['database'] = db
+    if ds['db_type']!='Oracle':
+        ds['database'] = db
     from com.phoenix.connections.connectionFactory import get_Connection
     conn = get_Connection(ds)
-    tables = conn.showTables()
+    if ds['db_type']=='Oracle':
+        tables = conn.showTables(db)
+    else:
+        tables = conn.showTables()
     return dict(tables=tables)
 
 @get('/api/datasources/{id}/databases/{db}/tables/{table}/fields')
 async def api_datasource_fields(*, id, db, table):
     ds = await DataSource.find(id)
-    ds['database'] = db
+    if ds['db_type']!='Oracle':
+        ds['database'] = db
+    else:
+        table = db + '.' + table
     from com.phoenix.connections.connectionFactory import get_Connection
     conn = get_Connection(ds)
     fields = conn.showFields(table)

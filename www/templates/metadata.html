@@ -30,6 +30,16 @@
 </style>
 <script>
     var vm_tree = undefined;
+    function loadUsers(index,ds){
+        getJSON("/api/datasources/" + ds.id + "/users", function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            
+            vm_tree.treeData.datasources[index].databases = results.databases;
+            vm_tree.$data = { treeData: vm_tree.treeData };
+        });
+    }
     function loadDatabases(index,ds){
         getJSON("/api/datasources/" + ds.id + "/databases", function (err, results) {
             if (err) {
