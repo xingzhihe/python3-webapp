@@ -71,7 +71,7 @@ async def api_datasource_databases(*, id):
 @get('/api/datasources/{id}/databases/{db}/tables')
 async def api_datasource_tables(*, id, db):
     ds = await DataSource.find(id)
-    if ds['db_type']!='Oracle':
+    if ds['db_type'] != 'Oracle':
         ds['database'] = db
     from com.phoenix.connections.connectionFactory import get_Connection
     conn = get_Connection(ds)

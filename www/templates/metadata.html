@@ -4,11 +4,14 @@
 
 {% block beforehead %}
 <style>
+    .uk-table tbody td {padding: 4px 8px;}
+    .navi span { display: inline-block; }
     .tree {
         border: 1px solid #ddd;
         padding: 5px;
         min-height: 250px;
     }
+    .tree .selected { background-color: #b5e5f7;}
     .tree li {
         cursor: pointer;
         list-style-type: none;
@@ -27,9 +30,47 @@
     .bold {
         font-weight: bold;
     }
+
+    .setting {
+        top:-35px; 
+        right:10px;
+        position:absolute; 
+    }
+    .setting ul {
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-bottom: 0px;
+        min-width: 210px;
+    }
+    .setting ul li{
+        display: block;
+        cursor: pointer;
+        position: relative;
+    }
+    .setting ul li label{
+        cursor: pointer;
+    }
+    .setting ul li .left {
+        display: inline-block;
+    }
+    .setting ul li .right {
+        display: inline-block;
+        position: absolute;
+        right: 0px;
+    }
+    .setting ul li .right span {
+        font-size: 50%; 
+    }
 </style>
+<script src="/static/js/hive.analyse.js"></script>
 <script>
     var vm_tree = undefined;
+    var vm_main_ds = undefined;
+    var vm_main_db = undefined;
+    var vm_main_table = undefined;
+    var vm_main_field = undefined;
+    var vm_main_navi = undefined;
+
     function loadUsers(index,ds){
         getJSON("/api/datasources/" + ds.id + "/users", function (err, results) {
             if (err) {
@@ -73,6 +114,343 @@
             vm_tree.$data = { treeData: vm_tree.treeData };
         });
     }
+    
+    function loadGridUser(index,ds){
+        getJSON("/api/datasources/" + ds.id + "/users", function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            initGridDatabase(ds, results.databases, results.page);
+        });
+    }
+    function loadGridDatabase(index,ds){
+        getJSON("/api/datasources/" + ds.id + "/databases", function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            initGridDatabase(ds, results.databases, results.page);
+        });
+    }
+    function loadGridTable(ds,db){
+        getJSON("/api/datasources/" + ds.id + "/databases/" + db.name + "/tables", function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            initGridTable(ds, db, results.tables, results.page);
+
+            var setting_item = vm_main_table.settings.items.filter(function(item){
+                return item.name == vm_main_table.settings.default;
+            });
+            if(setting_item.length > 0 && setting_item[0].name != "all"){
+                loadAnalyse(ds,db,setting_item[0].tables);
+            }
+        });
+    }
+    function loadGridField(ds,db,index,table){
+        getJSON("/api/datasources/" + ds.id + "/databases/" + db.name + "/tables/" + table.name + "/fields", function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            initGridField(ds, db, table, results.fields, results.page);
+        });
+    }
+    function loadAnalyse(ds,db,tables){
+        tables = tables || [];
+        postJSON("/api/metadata/analyse/" + ds.id + "/" + db.name, {"tables":tables}, function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+
+            if (vm_main_table){
+                var stats= results;
+                arr = [];
+                $.each(vm_main_table.tables, function(index, table){
+                    var item = { "name" : table.name };
+                    itemStats = stats[db.name + '.' + table.name];
+                    if(itemStats){
+                        item["total_size"] = itemStats["total_size"];
+                        item["num_files"] = itemStats["num_files"];
+                        item["num_rows"] = itemStats["num_rows"];
+                        if(vm_main_table.settings.onlyAnalyse) arr.push(item);
+                    }
+                    if(!vm_main_table.settings.onlyAnalyse) arr.push(item);
+                });
+                vm_main_table.$data={
+                    tables:arr,
+                    page:vm_main_table.page,
+                    settings:vm_main_table.settings
+                };
+            }
+        });
+    }
+
+    function initTree(ds){
+        $('#loading').hide();
+        $('#vm_tree').show();
+        vm_tree = new Vue({
+            el: '#vm_tree', 
+            data: {
+                treeData:{
+                    datasources:ds
+                }
+            },
+            methods: {
+                load_databases: function (ds) {
+                    loadDatabases(ds);
+                }
+            }
+        });
+    }
+
+    function initGridDataSource(items,page){
+        $("#vm_main >div:gt(0)").hide();
+        $('#vm_main_ds').show();
+        vm_main_ds = new Vue({
+            el: '#vm_main_ds', 
+            data: {
+                datasources:items,
+                page: page
+            },
+            methods: {
+                edit_datasource: function (ds) {
+                    location.assign('/manage/datasources/' + ds.id);
+                },
+                delete_datasource: function (ds) {
+                    var msg = ds.database + '@' + ds.host;
+                    if (confirm('确认要删除数据源“' + msg + '”？删除后不可恢复！')) {
+                        deleteJSON('/api/datasources/' + ds.id, function (err, r) {
+                            if (err) {
+                                return error(err);
+                            }
+                            refresh();
+                        });
+                    }
+                }
+            }
+        });
+        
+        initGridNavi();
+    }
+    function initGridDatabase(ds, items,page){
+        if (vm_main_db){
+            vm_main_db.$data={
+                    databases:items,
+                    page: page
+                };
+        }
+        else{
+            vm_main_db = new Vue({
+                el: '#vm_main_db', 
+                data: {
+                    databases:items,
+                    page: page
+                },
+                methods: {
+                    edit_datasbase: function (ds) {
+                        location.assign('/manage/datasources/' + ds.id);
+                    },
+                    delete_database: function (ds) {
+                        var msg = ds.database + '@' + ds.host;
+                        if (confirm('确认要删除数据源“' + msg + '”？删除后不可恢复！')) {
+                            deleteJSON('/api/datasources/' + ds.id, function (err, r) {
+                                if (err) {
+                                    return error(err);
+                                }
+                                refresh();
+                            });
+                        }
+                    }
+                }
+            });
+        }
+        $("#vm_main >div:gt(0)").hide();
+        $('#vm_main_db').show();
+        //$("#vm_main_navi_ds").html(ds.db_type + ' ' + ds.host + ':' + ds.port).show().siblings().hide();
+        
+        initGridNavi(ds);
+    }
+    function initGridTable(ds, db, items,page){
+        if (vm_main_table){
+            vm_main_table.$data={
+                    tables:items,
+                    page:vm_main_table.page,
+                    settings:vm_main_table.settings
+                };
+        }
+        else{
+            vm_main_table = new Vue({
+                el: '#vm_main_table', 
+                data: {
+                    tables:items,
+                    page:page,
+                    settings:solutions
+                },
+                computed: {
+                    showAnalyse: function(){
+                        return this.settings.default != "all";
+                    },
+                    onlyAnalyse: {
+                        get: function(){
+                            return this.settings.onlyAnalyse;
+                        },
+                        set: function(newVal){
+                            this.settings.onlyAnalyse = newVal;
+                            loadGridTable(ds,db);
+                        }
+                    }
+                },
+                methods: {
+                    isSelected: function (table) {
+                        var self=this;
+                        var setting_item = self.settings.items.filter(function(item){
+                            return item.name == self.settings.default;
+                        });
+                        
+                        return setting_item.length > 0 && 
+                                setting_item[0].tables.indexOf(table.name.toLowerCase()) > -1;
+                    },
+                    setting_click : function(setting_item){
+                        this.settings.default = setting_item.name;
+                        $.each(this.settings.items, function(index, item){
+                            item.checked = item.name == setting_item.name;
+                        });
+
+                        loadGridTable(ds, db);
+                    },
+                    setting_icon_save: function(setting_item, evt){
+                        if(evt) evt.stopPropagation();
+                        setting_icon_save(setting_item);  
+                    },
+                    setting_icon_saveas: function(setting_item, evt){
+                        if(evt) evt.stopPropagation();
+                        setting_icon_saveas(setting_item);
+                    },
+                    setting_icon_edit: function(setting_item, evt){
+                        if(evt) evt.stopPropagation();
+                        setting_icon_edit(setting_item);
+                    },
+                    setting_icon_remove: function(setting_item, evt){
+                        if(evt) evt.stopPropagation();
+                        setting_icon_remove(setting_item);
+                    },
+                    delete_table: function (ds) {
+                        var msg = ds.database + '@' + ds.host;
+                        if (confirm('确认要删除数据源“' + msg + '”？删除后不可恢复！')) {
+                            deleteJSON('/api/datasources/' + ds.id, function (err, r) {
+                                if (err) {
+                                    return error(err);
+                                }
+                                refresh();
+                            });
+                        }
+                    }
+                }
+            });
+        }
+        $("#vm_main >div:gt(0)").hide();
+        $('#vm_main_table').show();
+        //var curr_navi = $("#vm_main_navi_db").html(' > ' + db.name).show();
+        //curr_navi.prev().html(ds.db_type + ' ' + ds.host + ':' + ds.port);
+        //curr_navi.prevAll().show();
+        //curr_navi.nextAll().hide();
+
+        initGridNavi(ds, db);
+    }
+    function initGridField(ds, db, table, items,page){
+        if (vm_main_field){
+            vm_main_field.$data={
+                    fields:items,
+                    page: page
+                };
+        }
+        else{
+            vm_main_field = new Vue({
+                el: '#vm_main_field', 
+                data: {
+                    fields:items,
+                    page: page
+                },
+                methods: {
+                    edit_field: function (ds) {
+                        location.assign('/manage/datasources/' + ds.id);
+                    },
+                    delete_field: function (ds) {
+                        var msg = ds.database + '@' + ds.host;
+                        if (confirm('确认要删除数据源“' + msg + '”？删除后不可恢复！')) {
+                            deleteJSON('/api/datasources/' + ds.id, function (err, r) {
+                                if (err) {
+                                    return error(err);
+                                }
+                                refresh();
+                            });
+                        }
+                    }
+                }
+            });
+        }
+        $("#vm_main >div:gt(0)").hide();
+        $('#vm_main_field').show();
+        //var curr_navi = $("#vm_main_navi_table").html(' > ' + table.name).show();
+        //curr_navi.prev().html(' > ' + db.name).prev().html(ds.db_type + ' ' + ds.host + ':' + ds.port);
+        //curr_navi.prevAll().show();
+        //curr_navi.nextAll().hide();
+
+        initGridNavi(ds, db, table);
+    }
+
+    function initGridNavi(ds, db, table){
+        items = [];
+        level = 0;
+        if(ds) { items.push(ds.db_type + ' ' + ds.host + ':' + ds.port); level++; }
+        if(db) { items.push('&nbsp;>&nbsp;' + db.name); level++; }
+        if(table) { items.push('&nbsp;>&nbsp;' + table.name); level++; }
+
+        if (vm_main_navi){
+            vm_main_navi.$data={
+                    items:items,
+                    level: level
+                };
+        }
+        else{
+            vm_main_navi = new Vue({
+                el: '#vm_main_navi', 
+                data: {
+                    items:items,
+                    level:level
+                },
+                methods: {
+                    edit_item: function (ds) {
+                        location.assign('/manage/datasources/' + ds.id);
+                    },
+                    delete_item: function (ds) {
+                        var msg = ds.database + '@' + ds.host;
+                        if (confirm('确认要删除数据源“' + msg + '”？删除后不可恢复！')) {
+                            deleteJSON('/api/datasources/' + ds.id, function (err, r) {
+                                if (err) {
+                                    return error(err);
+                                }
+                                refresh();
+                            });
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+
+    function setting_icon_save(setting_item, evt){
+        alert("save:" + setting_item.name);
+    }
+    function setting_icon_saveas(setting_item, evt){
+        alert("saveas:" + setting_item.name);
+    }
+    function setting_icon_edit(setting_item, evt){
+        alert("edit:" + setting_item.name);
+    }
+    function setting_icon_remove(setting_item, evt){
+        alert("remove:" + setting_item.name);
+    }
 
     $(function() {
         getJSON('/api/datasources', {
@@ -82,24 +460,9 @@
                 return fatal(err);
             }
 
-            var ds = results.datasources;
-            $('#loading').hide();
-            $('#vm_tree').show();
-            vm_tree = new Vue({
-                el: '#vm_tree', 
-                data: {
-                    treeData:{
-                        datasources:ds
-                    }
-                },
-                methods: {
-                    load_databases: function (ds) {
-                        loadDatabases(ds);
-                    }
-                }
-            });
+            initTree(results.datasources);
+            initGridDataSource(results.datasources,results.page);
         });
-        
     });
 </script>
 
@@ -130,5 +493,191 @@
     <div id="vm_tree" class="uk-width-3-10">
         <my-tree v-with="treeData"></my-tree>
     </div>
-    <div id="vm_main" class="uk-width-7-10">士大夫大师傅</div>
+
+    <div id="vm_main" class="uk-width-7-10">
+        <div id="vm_main_navi" class="navi">
+            <span v-repeat="item: items" v-html="item"></span>
+            <!-- <span id="vm_main_navi_ds"></span>
+            <span id="vm_main_navi_db"></span>
+            <span id="vm_main_navi_table"></span> -->
+        </div>
+        <div id="vm_main_ds">
+            <a href="/manage/datasources/create" class="uk-button uk-button-primary"><i class="uk-icon-plus"></i> 新数据源</a>
+            
+            <table class="uk-table uk-table-hover">
+                <thead>
+                    <tr>
+                        <th style="width:20px;">index</th>
+                        <th class="uk-width-1-10">db_type</th>
+                        <th class="uk-width-1-10">host</th>
+                        <th class="uk-width-1-10">database</th>
+                        <th class="uk-width-1-10">port</th>
+                        <th class="uk-width-1-10">user</th>
+                        <th class="uk-width-1-10">password</th>
+                        <!-- <th class="uk-width-1-10">options</th> -->
+                        <th class="uk-width-2-10">create datetime</th>
+                        <th class="uk-width-1-10">操作</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-repeat="ds: datasources" >
+                        <td>
+                            <span v-text="$index+1"></span>
+                        </td>
+                        <td>
+                            <span v-text="ds.db_type"></span>
+                        </td>
+                        <td>
+                            <span v-text="ds.host"></span>
+                        </td>
+                        <td>
+                            <span v-text="ds.database"></span>
+                        </td>
+                        <td>
+                            <span v-text="ds.port"></span>
+                        </td>
+                        <td>
+                            <span v-text="ds.user"></span>
+                        </td>
+                        <td>
+                            <span v-text="ds.password"></span>
+                        </td>
+                        <td>
+                            <span v-text="ds.created_at.toDateTime()"></span>
+                        </td>
+                        <td>
+                            <a href="#0" v-on="click: edit_datasource(ds)"><i class="uk-icon-edit"></i></a>
+                            <a href="#0" v-on="click: delete_datasource(ds)"><i class="uk-icon-trash-o"></i></a>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div v-component="pagination" v-with="page"></div>
+        </div>
+
+        <div id="vm_main_db">
+            <table class="uk-table uk-table-hover">
+                <thead>
+                    <tr>
+                        <th style="width:20px;">index</th>
+                        <th class="uk-width-8-10">name</th>
+                        <th class="uk-width-1-10">操作</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-repeat="db: databases" >
+                        <td>
+                            <span v-text="$index+1"></span>
+                        </td>
+                        <td>
+                            <span v-text="db.name"></span>
+                        </td>
+                        <td>
+                            <a href="#0" v-on="click: edit_database(db)"><i class="uk-icon-edit"></i></a>
+                            <a href="#0" v-on="click: delete_database(db)"><i class="uk-icon-trash-o"></i></a>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div v-component="pagination" v-with="page"></div>
+        </div>
+
+        <div id="vm_main_table" style="position:relative;">
+            <div class="setting">
+                <ul>
+                    <li v-repeat="item: settings.items" 
+                        v-class="uk-icon-check-square-o: item.checked, uk-icon-square-o: !item.checked"
+                        v-on="click: setting_click(item)">
+                        <div class="left">
+                            <span v-text="item.label"></span>
+                        </div>
+                        <div class="right">
+                            <span class="icon uk-icon-save" v-on="click: setting_icon_save(item,$event)"></span>
+                            <span class="icon uk-icon-copy" v-on="click: setting_icon_saveas(item,$event)"></span>
+                            <span class="icon uk-icon-edit" v-on="click: setting_icon_edit(item,$event)"></span>
+                            <span class="icon uk-icon-cut" v-on="click: setting_icon_remove(item,$event)"></span>
+                        </div>
+                    </li>
+                    <li v-if="showAnalyse">
+                        <input type="checkbox" id="chkOnlyAnalyse" v-model="onlyAnalyse">
+                        <label for="chkOnlyAnalyse">Only Analyse</label>
+                    </li>
+                </ul>
+            </div>
+
+            <table class="uk-table uk-table-hover">
+                <thead>
+                    <tr>
+                        <th style="width:50px;"></th>
+                        <th>name</th>
+                        <th class="uk-width-1-10" v-if="showAnalyse">files</th>
+                        <th class="uk-width-1-10" v-if="showAnalyse">rows</th>
+                        <th class="uk-width-1-10" v-if="showAnalyse">size</th>
+                        <th class="uk-width-1-10">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-repeat="table: tables">
+                        <td>
+                            <input type="checkbox" v-model="isSelected(table)">
+                            <span v-text="$index+1"></span>
+                        </td>
+                        <td>
+                            <span v-text="table.name"></span>
+                        </td>
+                        <td v-if="showAnalyse">
+                            <span v-text="table.num_files"></span>
+                        </td>
+                        <td v-if="showAnalyse">
+                            <span v-text="table.num_rows"></span>
+                        </td>
+                        <td v-if="showAnalyse">
+                            <span v-text="table.total_size"></span>
+                        </td>
+                        <td>
+                            <a href="#0" v-on="click: delete_table(table)">Analyse</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div v-component="pagination" v-with="page"></div>
+        </div>
+
+        <div id="vm_main_field">
+            <table class="uk-table uk-table-hover">
+                <thead>
+                    <tr>
+                        <th style="width:20px;">index</th>
+                        <th class="uk-width-4-10">name</th>
+                        <th class="uk-width-4-10">data_type</th>
+                        <th class="uk-width-1-10">操作</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-repeat="field: fields" >
+                        <td>
+                            <span v-text="$index+1"></span>
+                        </td>
+                        <td>
+                            <span v-text="field.name"></span>
+                        </td>
+                        <td>
+                            <span v-text="field.data_type"></span>
+                        </td>
+                        <td>
+                            <a href="#0" v-on="click: edit_field(field)"><i class="uk-icon-edit"></i></a>
+                            <a href="#0" v-on="click: delete_field(field)"><i class="uk-icon-trash-o"></i></a>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div v-component="pagination" v-with="page"></div>
+        </div>
+    </div>
 {% endblock %}

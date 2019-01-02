@@ -412,27 +412,27 @@ if (typeof(Vue)!=='undefined') {
             '<li v-repeat="ds: datasources">' + 
                 '<div>' +
                     '<span class="icon"  v-on="click : load_databases($index,ds)">{{ ds.open ? "-":"+" }}</span>' + 
-                    '<span style="display:inline-block;">{{ ds.db_type + \' \' + ds.host + \':\' + ds.port }}</span>' + 
+                    '<span v-on="click : load_grid_db($index,ds,$event)">{{ ds.db_type + \' \' + ds.host + \':\' + ds.port }}</span>' + 
                 '</div>' + 
 
                 '<ul v-if="ds.open">' + 
                     '<li v-repeat="db: ds.databases">' + 
                         '<div>' +
                             '<span class="icon" v-on="click : load_tables(ds,$index,db,$event)">{{ db.open ? "-":"+" }}</span>' + 
-                            '<span style="display:inline-block;">{{ db.name }}</span>' + 
+                            '<span v-on="click : load_grid_table(ds,$index,db,$event)">{{ db.name }}</span>' + 
                         '</div>' + 
 
                         '<ul v-if="db.open">' + 
                             '<li v-repeat="dt: db.tables">' + 
                                 '<div>' +
                                     '<span class="icon" v-on="click : load_fields(ds,db,$index,dt,$event)">{{ dt.open ? "-":"+" }}</span>' + 
-                                    '<span style="display:inline-block;">{{ dt.name }}</span>' + 
+                                    '<span v-on="click : load_grid_field(ds,db,$index,dt,$event)">{{ dt.name }}</span>' + 
                                 '</div>' + 
 
                                 '<ul v-if="dt.open">' + 
                                     '<li v-repeat="field: dt.fields">' + 
                                         '<div>' +
-                                            '<span style="display:inline-block;">{{ field.name + "&nbsp;&nbsp;&nbsp;&nbsp;" + field.data_type }}</span>' + 
+                                            '<span>{{ field.name + "&nbsp;&nbsp;&nbsp;&nbsp;" + field.data_type }}</span>' + 
                                         '</div>' + 
                                     '</li>' +
                                 '</ul>' +
@@ -478,6 +478,27 @@ if (typeof(Vue)!=='undefined') {
                 }else{
                     this.$data = this.$data;
                 }
+            },
+            load_grid_db: function (index,ds,evt) {
+                if(ds.db_type=='Oracle'){
+                    loadGridUser(index,ds);
+                }else{
+                    loadGridDatabase(index,ds);
+                }
+                $(evt.target).parents(".tree").find("span.selected").removeClass("selected");
+                $(evt.target).addClass("selected");
+            },
+            load_grid_table: function (ds,index,db,evt) {
+                if(evt) evt.stopPropagation();
+                loadGridTable(ds,db);
+                $(evt.target).parents(".tree").find("span.selected").removeClass("selected");
+                $(evt.target).addClass("selected");
+            },
+            load_grid_field: function (ds,db,index,table,evt) {
+                if(evt) evt.stopPropagation();
+                loadGridField(ds,db,index,table);
+                $(evt.target).parents(".tree").find("span.selected").removeClass("selected");
+                $(evt.target).addClass("selected");
             }
         }
     });

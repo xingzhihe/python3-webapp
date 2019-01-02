@@ -65,6 +65,13 @@ class DataSource(Model):
     def get_Connection(self):
         connString = '%s://%s:%d/%s' % (self.db_type, self.host, self.port, self.database)
         return connString
+    
+    def get_MetadataSource(self):
+        if self.db_type == 'Impala' :
+            ds = DataSource(db_type="MySQL", host="10.10.8.102", database="hive_db", port=3306, user="etlusr", password="etlusr")
+        else:
+            ds = self
+        return ds
 
 if __name__ == '__main__':
     ds=DataSource(db_type='mysql', host='127.0.0.1', port=3306, database='awesome', user='etlusr', password='etlusr')
