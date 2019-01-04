@@ -569,7 +569,8 @@
         // 指定图表的配置项和数据
         var option = {
             title: {
-                text: 'ECharts 入门示例'
+                text: 'ECharts 入门示例',
+                left: 100
             },
             tooltip: {},
             legend: {
@@ -586,13 +587,15 @@
             }]
         };
 
+        var ww = $("#rptBar").width();
         if(dic){
-            option.legend.data = ['files','rows','size'];
+            option.title.text = 'Impala compute stats';
             option.xAxis.data = [];
             option.yAxis = [{
+                    name: "rows",
                     type : 'value',
                     position: 'left',
-                    splitNumber: 5,
+                    splitNumber: 10,
                     boundaryGap: [0,0.1],
                     axisTick : {    // 轴标记
                         show:true,
@@ -607,48 +610,63 @@
                         show:true,
                         lineStyle:{
                             color: ['#eee', '#eee']
-                            }
                         }
-
+                    }
                 },
                 {
+                    name: "size(MB)",
                     type : 'value',
-                    offset: -250,
-                    splitNumber: 5,
+                    splitNumber: 10,
                     position: 'right',
                     splitLine:{
                         show:false,
                     }
-
-                },
-                {
-                    type : 'value',
-                    splitNumber: 5,
-                    position: 'right',
-                    splitLine:{
-                        show:false,
-                    }
-
                 }];
             option.series = [];
-            var s1 = { name: "files", type: "bar", data: [], yAxisIndex: 0 };
-            var s2 = { name: "rows", type: "bar", data: [], yAxisIndex: 1 };
-            var s3 = { name: "size", type: "bar", data: [], yAxisIndex: 2 };
+            total_files = 0;
+            total_size = 0;
+            var s2 = { type: "line", data: [], yAxisIndex: 0 };
+            var s3 = { type: "bar", data: [], yAxisIndex: 1 };
             for(key in dic){
                 item = dic[key];
+                var size = item.total_size/1024/1024;
                 option.xAxis.data.push(key.split('.')[1]);
-                s1.data.push(item.num_files);
                 s2.data.push(item.num_rows);
-                s3.data.push(item.total_size);
+                s3.data.push(size.toFixed(2));
+                total_files = total_files + item.num_rows;
+                total_size = total_size + size;
             }
-
-            option.series.push(s1);
+            total_size = total_size.toFixed(2);
+            s2.name = '\nrows\n' + formatNumber(total_files);
+            s3.name = '\nsize\n' + total_size + 'MB';
             option.series.push(s2);
             option.series.push(s3);
+
+            option.legend.data = [s2.name, s3.name];
+            
+            ww = s3.data.length * 10;
+            if(ww > 1200){
+                option.xAxis.axisLabel = { interval:0, rotate:-40 };
+                option.dataZoom = [
+                    {   // 这个dataZoom组件，默认控制x轴。
+                        type: 'slider', // 这个 dataZoom 组件是 slider 型 dataZoom 组件
+                        start: 0,      // 左边在 10% 的位置。
+                        end: 60         // 右边在 60% 的位置。
+                    }
+                ];
+            }
         }
 
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
+        
+        // if(ww > 1200){
+        //     myChart.resize({ width: ww });
+        // }
+    }
+    function formatNumber (num) {  
+        var reg=/\d{1,3}(?=(\d{3})+$)/g;   
+        return (num + '').replace(reg, '$&,');  
     }
 
     $(function() {
@@ -912,5 +930,5 @@
     </div>
 
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-    <div id="rptBar" style="width: 600px;height:400px;"></div>
+    <div id="rptBar" style="width: 1200px;height:800px;"></div>
 {% endblock %}
