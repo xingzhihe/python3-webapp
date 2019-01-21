@@ -201,7 +201,7 @@
                     settings:vm_main_table.settings
                 };
 
-                rptBar(stats);
+                rptBar(ds,db,stats);
             }
         });
     }
@@ -421,16 +421,22 @@
 
                         this.saveSetting();
                     },
-                    delete_table: function (ds) {
-                        var msg = ds.database + '@' + ds.host;
-                        if (confirm('确认要删除数据源“' + msg + '”？删除后不可恢复！')) {
-                            deleteJSON('/api/datasources/' + ds.id, function (err, r) {
-                                if (err) {
-                                    return error(err);
+                    analyse_table: function (table) {
+                        getJSON('/api/metadata/analyse/' + ds.id + "/" + db.name + "/" + table.name, function (err, r) {
+                            if (err) {
+                                return error(err);
+                            }
+                            
+                            var stats= r;
+                            $.each(vm_main_table.tables, function(index, item){
+                                itemStats = stats[db.name + '.' + item.name];
+                                if(itemStats){
+                                    item["total_size"] = itemStats["total_size"];
+                                    item["num_files"] = itemStats["num_files"];
+                                    item["num_rows"] = itemStats["num_rows"];
                                 }
-                                refresh();
                             });
-                        }
+                        });
                     }
                 }
             });
@@ -562,9 +568,12 @@
     }
 
     var myChart = undefined;
-    function rptBar(dic)  {
+    function rptBar(ds,db,dic)  {
         // 基于准备好的dom，初始化echarts实例
         if(!myChart) myChart = echarts.init(document.getElementById('rptBar'));
+        myChart.clear();
+        var ds_id = ds ? ds.id : "";
+        var db_name = db ? db.name : "";
 
         // 指定图表的配置项和数据
         var option = {
@@ -592,45 +601,53 @@
             option.title.text = 'Impala compute stats';
             option.xAxis.data = [];
             option.yAxis = [{
-                    name: "rows",
-                    type : 'value',
-                    position: 'left',
-                    splitNumber: 10,
-                    boundaryGap: [0,0.1],
-                    axisTick : {    // 轴标记
-                        show:true,
-                        length: 10,
-                        lineStyle: {
-                            color: 'green',
-                            type: 'solid',
-                            width: 2
-                        },
+                name: "rows",
+                type : 'value',
+                position: 'left',
+                splitNumber: 10,
+                boundaryGap: [0,0.1],
+                axisTick : {    // 轴标记
+                    show:true,
+                    length: 10,
+                    lineStyle: {
+                        color: 'green',
+                        type: 'solid',
+                        width: 2
                     },
-                    splitLine:{
-                        show:true,
-                        lineStyle:{
-                            color: ['#eee', '#eee']
-                        }
-                    }
                 },
-                {
-                    name: "size(MB)",
-                    type : 'value',
-                    splitNumber: 10,
-                    position: 'right',
-                    splitLine:{
-                        show:false,
+                splitLine:{
+                    show:true,
+                    lineStyle:{
+                        color: ['#eee', '#eee']
                     }
-                }];
+                }
+            },
+            {
+                name: "size(MB)",
+                type : 'value',
+                splitNumber: 10,
+                position: 'right',
+                splitLine:{
+                    show:false,
+                }
+            }];
+            
             option.series = [];
             total_files = 0;
             total_size = 0;
             var s2 = { type: "line", data: [], yAxisIndex: 0 };
             var s3 = { type: "bar", data: [], yAxisIndex: 1 };
+            var clickable = true;
+            var table_name = "";
             for(key in dic){
+                var arr = key.split('.');
+                table_name = arr[0];
+                key1 = arr[1];
+                if(table_name != db.name) clickable = false;
+
                 item = dic[key];
                 var size = item.total_size/1024/1024;
-                option.xAxis.data.push(key.split('.')[1]);
+                option.xAxis.data.push(key1);
                 s2.data.push(item.num_rows);
                 s3.data.push(size.toFixed(2));
                 total_files = total_files + item.num_rows;
@@ -650,10 +667,75 @@
                 option.dataZoom = [
                     {   // 这个dataZoom组件，默认控制x轴。
                         type: 'slider', // 这个 dataZoom 组件是 slider 型 dataZoom 组件
-                        start: 0,      // 左边在 10% 的位置。
-                        end: 60         // 右边在 60% 的位置。
+                        start: 0,      // 左边在 0% 的位置。
+                        end: 30         // 右边在 30% 的位置。
+                    },{
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        start: 00,
+                        end: 30
                     }
                 ];
+            }
+            
+            if (clickable) {
+                option.graphic = [];
+
+                myChart.getZr().off('click');
+                myChart.getZr().on('click', function (params) {
+                    var pointInPixel = [params.offsetX, params.offsetY];
+                    if (myChart.containPixel('grid',pointInPixel)) {
+                        var pointInGrid = myChart.convertFromPixel({seriesIndex:0},pointInPixel);
+                        //X轴序号
+                        var xIndex = pointInGrid[0];
+                        //获取当前图表的option
+                        var op = myChart.getOption();
+                        //获得图表中我们想要的数据
+                        var table = op.xAxis[0].data[xIndex];
+
+                        console.log(table);
+                        if(ds_id.length > 0 && db_name.length > 0){
+                            getJSON('/api/metadata/analyse/' + ds_id + "/" + db_name + "/" + table + "/partitions", function (err, r) {
+                                if (err) {
+                                    return error(err);
+                                }
+                                console.log(r);
+                                
+                                rptBar(ds,db,r);
+                            });
+                        }
+                    }
+                });
+            } else {
+                option.title.text += ' on table of ' + table_name;
+                option.graphic = [{
+                    type: 'group',
+                    right: 200,
+                    top: 20,
+                    width: 50,
+                    children: [{
+                        info: 'drill_up_db', 
+                        type: 'text',
+                        z: 100,
+                        left: '0%',
+                        top: 'top',
+                        style: {
+                            fill: '#333',
+                            text: '返回',
+                            font: '14px Microsoft YaHei'
+                        },
+                        onclick: function(params){
+                            var model = {};
+                            $.each(vm_main_table.tables, function(index, item){
+                                model[db_name + '.' + item.name] = {
+                                    num_rows: item.num_rows,
+                                    total_size: item.total_size
+                                }
+                            });
+                            rptBar(ds,db,model);
+                        }
+                    }]
+                }];
             }
         }
 
@@ -697,7 +779,6 @@
                 <li><a href="/manage/users">用户</a></li>
                 <li><a href="/manage/datasources">数据源</a></li>
                 <li class="uk-active"><span>元数据</span></li>
-                <li><a href="/manage/captcha">验证码</a></li>
             </ul>
         </div>
     </div>
@@ -855,7 +936,7 @@
                             <span v-text="table.total_size"></span>
                         </td>
                         <td>
-                            <a href="#0" v-on="click: delete_table(table)">Analyse</a>
+                            <a href="#0" v-on="click: analyse_table(table)">Analyse</a>
                         </td>
                     </tr>
                 </tbody>

@@ -12,6 +12,38 @@ from com.phoenix.apis import Page, APIError, APIValueError, APIResourceNotFoundE
 from com.phoenix.models import DataSource
 from com.phoenix.common import get_page_index
 
+@get('/api/metadata/analyse/{dsId}/{db}/{table}/partitions')
+async def api_metadata_analyse_partition(request, *, dsId,db,table):
+    ds = await DataSource.find(dsId)
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(ds)
+    conn.computeStats(db,table)
+
+    dsMetadata = ds.get_MetadataSource()
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(dsMetadata)
+    arr = conn.analysePartition(db,table)
+    result = {}
+    for item in arr:
+        result[item["table_name"] + '.' + item["partition_name"]]= dict(num_files=item["num_files"], num_rows=item["num_rows"], total_size=item["total_size"])
+    return result
+
+@get('/api/metadata/analyse/{dsId}/{db}/{table}')
+async def api_metadata_analyse_table(request, *, dsId,db,table):
+    ds = await DataSource.find(dsId)
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(ds)
+    conn.computeStats(db,table)
+
+    dsMetadata = ds.get_MetadataSource()
+    from com.phoenix.connections.connectionFactory import get_Connection
+    conn = get_Connection(dsMetadata)
+    arr = conn.analyse(db,table)
+    result = {}
+    for item in arr:
+        result[item["db_name"] + '.' + item["table_name"]]= dict(num_files=item["num_files"], num_rows=item["num_rows"], total_size=item["total_size"])
+    return result
+
 @post('/api/metadata/analyse/{dsId}/{db}')
 async def api_metadata_analyse(request, *, dsId,db,tables):
     ds = await DataSource.find(dsId)

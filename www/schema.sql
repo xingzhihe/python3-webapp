@@ -4,7 +4,7 @@ create database awesome;
 
 use awesome;
 
-grant select, insert, update, delete on awesome.* to 'www-data'@'localhost' identified by 'www-data';
+grant select, insert, update, delete on awesome.* to 'etlusr'@'localhost' identified by 'etlusr';
 
 create table users (
     `id` varchar(50) not null,
@@ -57,3 +57,6 @@ create table datasources (
     key `idx_created_at` (`created_at`),
     primary key (`id`)
 ) engine=innodb default charset=utf8;
+
+
+INSERT INTO `users` (`id`, `email`, `passwd`, `admin`, `name`, `image`, `created_at`) VALUES('001538901417388a03570925af44f84b556ccbc8919b99d000','aa@163.com','169a6a1acb9f9d6a78634036ecb5c162943cebdb','1','aa','about:blank','1538901417.38854');
