@@ -502,6 +502,66 @@ if (typeof(Vue)!=='undefined') {
             }
         }
     });
+
+    Vue.component('res-tree', {
+        template: '<ul class="tree">' + 
+            '<li v-repeat="res: resources">' + 
+                '<div>' +
+                    '<span class="icon"  v-on="click : load_children($index,res)">{{ res.open ? "-":"+" }}</span>' + 
+                    '<span v-on="click : load_grid($index,res,$event)">{{ res.name }}</span>' + 
+                '</div>' + 
+
+                '<ul v-if="res.open">' + 
+                    '<li v-repeat="child: res.items">' + 
+                        '<div>' +
+                            '<span class="icon" v-on="click : load_children($index,child,$event)">{{ child.open ? "-":"+" }}</span>' + 
+                            '<span v-on="click : load_grid(res,$index,child,$event)">{{ child.name }}</span>' + 
+                        '</div>' + 
+                    '</li>' +
+                '</ul>' +
+
+            '</li>' +
+        '</ul>',
+        methods: {
+            load_children: function (index,res) {
+                res.open = !res.open;
+                this.$data = this.$data;     
+            },
+            load_grid: function (res,index,child,evt) {
+                $(evt.target).parents(".tree").find("span.selected").removeClass("selected");
+                $(evt.target).addClass("selected");
+                alert(res.name + '--' + child.name)
+            }
+        }
+    });
+
+    Vue.component('hxz-tree', {
+        template: '<ul class="tree">' + 
+                '<hxz-tree-item v-repeat="res: resources"></hxz-tree-item>' +
+            '</ul>'
+    });
+
+    Vue.component('hxz-tree-item', {
+        template: '<li class="tree-item">' +
+                '<div>' +
+                   '<span class="icon" v-if="res.items.length > 0"  v-on="click : load_children($index,res)">{{ res.open ? "-":"+" }}</span>' + 
+                   '<span v-on="click : load_grid($index,res,$event)">{{ res.name }}</span>' + 
+                '</div>' + 
+                '<ul v-if="res.open">' +
+                    '<hxz-tree-item v-repeat="res: res.items"></hxz-tree-item>' + 
+                '</ul>'+
+            '</li>',
+        methods: {
+            load_children: function (index,res) {
+                res.open = !res.open;
+                this.$data = this.$data;     
+            },
+            load_grid: function (index,res,evt) {
+                $(evt.target).parents(".tree").find("span.selected").removeClass("selected");
+                $(evt.target).addClass("selected");
+            }
+        }
+    });
 }
 
 function redirect(url) {

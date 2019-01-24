@@ -55,3 +55,11 @@ def manage_metadata(*, page='1'):
         '__template__': 'metadata.html',
         'page_index': get_page_index(page)
     }
+
+@get('/manage/resources')
+def manage_resources(*, page='1'):
+    return {
+        '__template__': 'resources.html',
+        'page_index': get_page_index(page)
+    }
+
