@@ -10,7 +10,7 @@ from coroweb import get, post, put, delete
 from com.phoenix.apis import Page, APIError, APIValueError, APIResourceNotFoundError, APIPermissionError
 
 from com.phoenix.models import DataSource
-from com.phoenix.common import get_page_index
+from com.phoenix.common import get_page_index, get_current_folder
 
 @get('/api/metadata/analyse/{dsId}/{db}/{table}/partitions')
 async def api_metadata_analyse_partition(request, *, dsId,db,table):

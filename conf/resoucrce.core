@@ -1,0 +1,1 @@
+root:[sys:[aa,bb,cc],user:[hxz,yjm,hp],base_res:[label,description],base_res#int:[label:整数,description:整数],base_res#string:[label:文本,description:字符串],var:[base_res#type],var#aa:[type:base_res#int],var#bb:[type:base_res#string],order:[var#id:[type:base_res#int],var#title:[type:base_res#string]],order#1:[id:1,title:哈密瓜],order#2:[id:int#2,title:string#猕猴桃]]

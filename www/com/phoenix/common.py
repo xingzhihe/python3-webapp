@@ -23,3 +23,9 @@ def get_page_index(page_str):
     if p < 1:
         p = 1
     return p
+
+def get_current_folder():
+    import os
+    current_file = os.path.abspath(__file__)
+    current_dir = os.path.abspath(os.path.dirname(current_file))
+    return current_dir
