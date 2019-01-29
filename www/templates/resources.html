@@ -31,6 +31,15 @@
     .bold {
         font-weight: bold;
     }
+
+    .uk-panel-body {
+        margin-left: 10px;
+        margin-right: 5px;
+    }
+    .uk-panel-body span.item {
+        display: inline-block;
+        margin-right: 5px;
+    }
 </style>
 <script>
     var vm_tree = undefined;
@@ -51,6 +60,90 @@
             }
         });
     }
+    function initGrid(resources){
+        //$("#vm_grid >div:gt(0)").hide();
+        $('#vm_grid').show();
+        vm_main_ds = new Vue({
+            el: '#vm_grid', 
+            data: {
+                newResource: { 
+                    name : "resource1", 
+                    items: [
+                        { name : "item1", items: []},
+                        { name : "item2", items: []},
+                        { name : "item3", items: []}
+                    ]
+                },
+                resources:resources
+            }, 
+            isNew: false,
+            methods: {
+                res_new: function(){
+                    this.isNew = true;
+                    this.bakResource = this.$data.newResource;
+                    this.$data = this.$data;
+                },
+                sel_res_type: function(res, evt){
+                    console.log(res.name);
+                    $(evt.currentTarget).parents("div.uk-dropdown").prev().val(res.name);
+                    $(evt.currentTarget).parents("div.uk-button-dropdown").removeClass("uk-open");
+                    evt.stopPropagation();
+                },
+                res_item_add: function(index, res, evt){
+                    index++;
+                    var obj = {name:"item"+index, items:[]};
+                    res.items.splice(index,0,obj);
+                },
+                res_item_del: function(index, res, evt){
+                    res.items.splice(index,1);
+                },
+                res_operation: function(res, index, cmd){
+                    if(cmd == 'edit'){ 
+                        res.edit = true;
+                        this.$data = this.$data;
+                    }else if(cmd == 'undo'){
+                        if(this.isNew){
+                            this.$data.newResource = this.bakResource;
+                            this.isNew = false;
+                            this.$data = this.$data;
+                        }else{
+                            res.edit = false;
+                            this.$data = this.$data;
+                        }
+                    }else if(cmd == 'save'){
+                        var model = { name:res.name, items:[] };
+                        $.each(res.items, function(index, item){
+                            model.items.push({ name:item.name, items:[] });    
+                        })
+                        
+                        var self = this;
+                        if(this.isNew){
+                            postJSON('/api/resources', model, function (err, results) {
+                                self.isNew = false;
+                                self.$data.resources.push(model);
+                                self.$data.newResource = self.bakResource;
+                                self.$data = self.$data;
+                            });
+                        }else{
+                            res.edit = false;
+                            putJSON('/api/resources/' + index, model, function (err, results) {
+                                self.$data.resources.splice(index,1,model);
+                            });
+                        }
+                    }else if(cmd == 'remove'){
+                        var model = { name:res.name, items:[] };
+                        $.each(res.items, function(index, item){
+                            model.items.push(item.name);    
+                        })
+                        var self = this;
+                        deleteJSON('/api/resources/' + index, function (err, results) {
+                            self.$data.resources.splice(index,1);
+                        });
+                    }
+                }
+            }
+        });
+    }
 
     $(function() {
         getJSON('/api/resources', function (err, results) {
@@ -59,8 +152,7 @@
             }
 
             initTree(results.resources);
-            
-            //initGridDataSource(results.datasources,results.page);
+            initGrid(results.resources);
         });
     });
 
@@ -95,7 +187,83 @@
     </div>
 
     <div id="vm_main" class="uk-width-7-10">
+        <div id="vm_grid" class="uk-grid uk-grid-small" data-uk-grid-margin>
+            <div class="uk-width-medium-1-5" v-repeat="res: resources">
+                <div v-show="res.edit==true" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px; margin-top: 10px;">
+                    <div style="position: absolute; right: 2px; top: 0px; cursor: pointer;">
+                        <i v-on="click: res_operation(res,$index,'save')" class="uk-icon-save" style="font-size: 8px;"></i>
+                        <i v-on="click: res_operation(res,$index,'undo')" class="uk-icon-undo" style="font-size: 8px;"></i>
+                    </div>
+                    <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;">
+                        <input v-model="res.name" style="width:80%; font-size: 8px;">
+                    </h3>
         
+                    <div class="uk-panel-body">
+                        <div v-repeat="item: res.items">
+                            <input style="width:50px; height: 18px;" v-model="item.name">
+                            <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:40px; margin-top: -3px;">
+                                <input style="width:100%; height: 18px; cursor: pointer;" value="res">
+                                <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
+                                    <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
+                                        <li v-on="click: sel_res_type(resItem,$event)" v-repeat="resItem: resources" v-text="resItem.name"></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <i v-on="click: res_item_add($index,res,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-on="click: res_item_del($index,res,$evemt)" class="uk-icon-minus" style="font-size: 6px; cursor: pointer;"></i>
+                        </div>
+                        <i v-show="res.items.length == 0" v-on="click: res_item_add(0,res,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div v-show="!res.edit" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px;">
+                    <div style="position: absolute; right: 2px; top: 0px; cursor: pointer;">
+                        <i v-on="click: res_operation(res,$index,'remove')" class="uk-icon-trash-o" style="font-size: 8px;"></i>
+                        <i v-on="click: res_operation(res,$index,'edit')" class="uk-icon-edit" style="font-size: 8px;"></i>
+                    </div>
+                    <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;" v-text="res.name"></h3>
+        
+                    <div class="uk-panel-body">
+                        <span class="item" v-repeat="item: res.items" v-text="item.name"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="uk-width-medium-1-5">
+                <div v-show="isNew" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px; margin-top: 10px;">
+                    <div style="position: absolute; right: 2px; top: 0px; cursor: pointer;">
+                        <i v-on="click: res_operation(newResource,$index,'save')" class="uk-icon-save" style="font-size: 8px;"></i>
+                        <i v-on="click: res_operation(newResource,$index,'undo')" class="uk-icon-undo" style="font-size: 8px;"></i>
+                    </div>
+                    <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;">
+                        <input v-model="newResource.name" style="width:80%; font-size: 8px;">
+                    </h3>
+        
+                    <div class="uk-panel-body">
+                        <div v-repeat="item: newResource.items">
+                            <input style="width:50px; height: 18px;" v-model="item.name">
+                            <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:40px; margin-top: -3px;">
+                                <input style="width:100%; height: 18px; cursor: pointer;" value="res">
+                                <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
+                                    <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
+                                        <li v-on="click: sel_res_type(resItem,$event)" v-repeat="resItem: resources" v-text="resItem.name"></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <i v-on="click: res_item_add($index,newResource,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-on="click: res_item_del($index,newResource,$evemt)" class="uk-icon-minus" style="font-size: 6px; cursor: pointer;"></i>
+                        </div>
+                        <i v-show="newResource.items.length == 0" v-on="click: res_item_add(0,newResource,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div v-show="!isNew" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px;">
+                    <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;">新建资源</h3>
+        
+                    <div class="uk-panel-body">
+                        <i v-on="click: res_new()" class="uk-icon-plus uk-icon-small" style="cursor: pointer; margin-left: 50px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     
 {% endblock %}

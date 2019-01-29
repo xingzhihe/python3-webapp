@@ -14,6 +14,10 @@ class Resource(object):
     def appendItem(self, item):
         self.items.append(item)
     
+    def setItems(self, items):
+        self.items = items
+        return self
+    
     def clearItems(self):
         self.items = []
     
@@ -163,7 +167,11 @@ class ResourceToken(object):
 class ResourceService(object):
     def __init__(self):
         self.factory = ResourceFactory('resoucrce.core')
-        self.rootResource = self.factory.load()
+        
+        self.rootResource = gl.get_value('rootResource')
+        if self.rootResource is None :
+            self.rootResource = self.factory.load()
+            gl.set_value('rootResource', self.factory.load())
 
     def add(self, resource):
         if isinstance(resource, str):
@@ -172,8 +180,38 @@ class ResourceService(object):
             self.rootResource.appendItem(resource)
         
         self.factory.save(self.rootResource)
+    
+    def update(self, resource):
+        try:
+            index = self.rootResource.items.index(resource)
+            self.rootResource.items[index] = resource
+            self.factory.save(self.rootResource)
+        except ValueError:
+            print('update resource occur error!')
+    
+    def updateWithIndex(self, index, resource):
+        try:
+            index = int(index)
+            self.rootResource.items[index] = resource
+            self.factory.save(self.rootResource)
+        except ValueError:
+            print('update resource occur error!')
+        
+    def remove(self, resource):
+        try:
+            if isinstance(resource, str):
+                index = int(resource)
+            else:
+                index = self.rootResource.items.index(resource)
+            del self.rootResource.items[index]
+            self.factory.save(self.rootResource)
+        except ValueError:
+            pass
 
 if __name__ == '__main__':
     print('作为主程序运行')
 else:
     print('resource 初始化')
+    
+    import com.phoenix.globalvar as gl
+    gl._init()
