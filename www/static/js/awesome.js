@@ -538,14 +538,22 @@ if (typeof(Vue)!=='undefined') {
     Vue.component('hxz-tree', {
         template: '<ul class="tree">' + 
                 '<hxz-tree-item v-repeat="res: resources"></hxz-tree-item>' +
-            '</ul>'
+            '</ul>',
+        methods: {
+            aa: function (index,res,evt) {
+                //res.open = !res.open;
+                //this.$data = this.$data;
+                console.log("item clicked!");
+                alert(this.bb);
+            }
+        }
     });
 
     Vue.component('hxz-tree-item', {
         template: '<li class="tree-item">' +
                 '<div>' +
                    '<span class="icon" v-if="res.items.length > 0"  v-on="click : load_children($index,res)">{{ res.open ? "-":"+" }}</span>' + 
-                   '<span v-on="click : load_grid($index,res,$event)">{{ res.name }}</span>' + 
+                   '<span v-on="click : item_click($index,res,$event)">{{ res.uri }}</span>' + 
                 '</div>' + 
                 '<ul v-if="res.open">' +
                     '<hxz-tree-item v-repeat="res: res.items"></hxz-tree-item>' + 
@@ -556,9 +564,10 @@ if (typeof(Vue)!=='undefined') {
                 res.open = !res.open;
                 this.$data = this.$data;     
             },
-            load_grid: function (index,res,evt) {
+            item_click: function (index,res,evt) {
                 $(evt.target).parents(".tree").find("span.selected").removeClass("selected");
                 $(evt.target).addClass("selected");
+                this.$parent.aa(index,res,evt);
             }
         }
     });

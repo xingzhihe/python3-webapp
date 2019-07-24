@@ -63,3 +63,17 @@ def manage_resources(*, page='1'):
         'page_index': get_page_index(page)
     }
 
+@get('/manage/resources_base')
+def manage_resources_base(*, page='1'):
+    return {
+        '__template__': 'resources_base.html',
+        'page_index': get_page_index(page)
+    }
+
+@get('/manage/resources_domain')
+def manage_resources_domain(*, page='1'):
+    return {
+        '__template__': 'resources_domain.html',
+        'page_index': get_page_index(page)
+    }
+

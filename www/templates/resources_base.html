@@ -1,0 +1,499 @@
+{% extends '__base__.html' %}
+
+{% block title %}资源管理{% endblock %}
+
+{% block beforehead %}
+<style>
+    i[class^="uk-icon-"]{ cursor: pointer; }
+    .uk-panel-body .item {
+        display: block;
+        margin-left: 20px;
+        margin-bottom: 5px;
+    }
+    .uk-panel-body .item span.label{
+        width:100px;
+        text-align: right;
+        display: inline-block;
+    }
+    .uk-panel-body .item .subitem{
+        margin-left:104px;
+    }
+    ul.uk-nav-dropdown > li.selected {
+        background-color: #b5e5f7;
+    }
+    .uk-modal-header {
+        margin-bottom: 15px;
+        margin: -20px -20px 15px -20px;
+        padding: 20px;
+        border-bottom: 1px solid #e5e5e5;
+        border-radius: 4px 4px 0 0;
+        background: #fafafa;
+    }
+
+    .uk-modal-footer {
+        margin-top: 15px;
+        margin: 15px -20px -20px -20px;
+        padding: 20px;
+        border-top: 1px solid #e5e5e5;
+        border-radius: 0 0 4px 4px;
+        background: #fafafa
+    }
+    
+    .uk-icon-close:before,.uk-icon-remove:before,.uk-icon-times:before {
+        content: "\f00d"
+    }
+</style>
+<script>
+    var initModel = {
+        name:'res1', 
+        type:'res', 
+        isCollection:false, 
+        items:[
+            {name:'items', type:'res', isCollection:true, value:'', items:[]}
+        ]
+    };
+    var vm_main_grid = undefined;
+    function initMeta(resource){
+        $('#vm_meta').show();
+        vm_meta = new Vue({
+            el: '#vm_meta', 
+            data: {
+                model:resource || initModel
+            },
+            methods: {
+                edit_meta: function(res){
+                    //this.isNew = true;
+                    //this.bakResource = this.$data.newResource;
+                    //this.$data = this.$data;
+                },
+                remove_meta: function(res){
+                    //this.isNew = true;
+                    //this.bakResource = this.$data.newResource;
+                    //this.$data = this.$data;
+                }
+            }
+        });
+    }
+    
+    var vm_form = undefined;
+    function initForm(res, index){
+        var id = index || -1;
+        console.log("id=" + id);
+        resource = $.extend(true, {}, initModel);
+        // todo 根据type设置items属性
+        if(res){
+            var resources = vm_main_grid.$data.resources;
+            var resBase = resources.filter(function(item){ return item.name ==res.type; })[0];
+            var arrNameFiltered = resBase ? resBase.items.map(function(item){return item.name;}) : ["name","items"];
+            var item1 = [], item2 = [];
+            res.items.forEach(function(item){
+                if(arrNameFiltered.indexOf(item.name) == -1)
+                    item2.push({name:item.name, type:item.type, isCollection:item.isCollection, value:item.value});
+                else
+                    item1.push({name:item.name, type:item.type, isCollection:item.isCollection, value:item.value});
+            });
+            item1.push({name:'items', type:'res', isCollection:true, value:'', items:item2});
+
+            resource = {name:res.name, type:res.type, isCollection:false, items:item1};
+        }
+        loadResource(resource);
+        
+        $('#vm_form').show();
+        if(vm_form){
+            vm_form.$data = {
+                id: id, 
+                model:resource,
+                bakModel:$.extend(true, {}, resource), 
+                resources:vm_main_grid.$data.resources};
+            return;
+        }
+        vm_form = new Vue({
+            el: '#vm_form', 
+            data: {
+                id: id,
+                model:resource,
+                bakModel:$.extend(true, {}, resource),
+                resources:vm_main_grid.$data.resources
+            },
+            computed: {
+                itemsValue: {
+                    get: function(){ 
+                        var itemLast = this.model.items.filter(function(item){ return item.name=='items'; })[0];
+                        var arrName = itemLast.items.map(function(item){ return item.name; });
+                        return arrName.join(',');
+                    },
+                    set: function(newVal){ 
+                        var arrName = newVal.split(',');
+                        var itemLast = this.model.items.filter(function(item){ return item.name=='items'; })[0];
+                        itemLast.items = arrName.map(function(item){ return {name:item}; });
+                    }
+                }
+            },
+            methods: {
+                selResourceType: function(res, resSelected, evt, pos){
+                    console.log(resSelected.uri);
+                    res.type = resSelected.uri;
+                    var uri = res.name;
+                    if(res.type != 'res' && res.type.indexOf('#') > -1) uri = res.name + ':' + res.type;
+                    else if(res.type != 'res') uri = res.type + '#' + res.name;
+                    res.uri = uri;
+
+                    $(evt.currentTarget).parents("div.uk-dropdown").prev().val(resSelected.uri);
+                    $(evt.currentTarget).parents("div.uk-button-dropdown").removeClass("uk-open");
+                    $(evt.currentTarget).addClass("selected").siblings().removeClass("selected");
+                    evt.stopPropagation();
+
+                    this.$data = this.$data;
+                },
+                save: function(res){
+                    var item1=[], item2=[];
+                    for(var m=0; m<res.items.length; m++){
+                        var item = res.items[m];
+                        if(item.name == 'items'){
+                            item.items.map(function(subItem){
+                                item2.push({name:subItem.name, type:subItem.type, isCollection:subItem.isCollection});
+                            });
+                        }else{
+                            item1.push({name:item.name, type:item.type, isCollection:item.isCollection, value:item.value});
+                        }
+                    }
+                    var model = {name:res.items[0].value, type:'res', items:item1.concat(item2)};
+                    model = saveResource(model);
+                    var self = this;
+                    if(self.$data.id > -1){
+                        putJSON('/api/resources', model, function (err, results) {
+                            loadResource(model);
+                            vm_main_grid.$data.resources.splice(self.$data.id,1,model);
+                            $("#vm_form").find(".uk-modal-close").trigger("click");
+                        });
+                    } else {
+                        postJSON('/api/resources', model, function (err, results) {
+                            loadResource(model);
+                            
+                            vm_main_grid.$data.resources.push(model);
+                            vm_main_grid.$data = vm_main_grid.$data;
+                            $("#vm_form").find(".uk-modal-close").trigger("click");
+                        });
+                    }
+                },
+                cancel: function(res){
+                    id = this.$data.id;
+                    var resource = this.$data.bakModel;
+                    this.$data = {
+                        id: id, 
+                        model:resource, 
+                        bakModel:$.extend(true, {}, resource),
+                        resources:vm_main_grid.$data.resources
+                    };
+                },
+                isCollectionSubItem: function(itemIndex, res, evt){
+                    var item = res.items[itemIndex];
+                    item.isCollection = !item.isCollection;
+                },
+                addSubItem: function(itemIndex, res, evt){
+                    itemIndex++;
+                    var obj = {name:"item"+(res.items.length+1), type:'res', isCollection:false, value:"item"+(res.items.length+1)};
+                    res.items.splice(itemIndex,0,obj);
+                },
+                removeSubItem: function(itemIndex, res, evt){
+                    res.items.splice(itemIndex,1);
+                }
+            }
+        });
+    }
+    function initGrid(resources){
+        $('#loading').hide();
+        //$("#vm_grid >div:gt(0)").hide();
+        $('#vm_grid').show();
+        vm_main_grid = new Vue({
+            el: '#vm_grid', 
+            data: {
+                resources:resources
+            }, 
+            isNew: false,
+            methods: {
+                open_meta: function(res){
+                    initMeta();
+                },
+                open_form: function(res){
+                    initForm();
+                },
+                edit: function(res, index){
+                    initForm(res, index);
+                },
+                remove: function(res, index){
+                    name = res.uri;
+                    if (confirm('确认要删除资源“' + res.uri + '”？删除后不可恢复！')) {
+                        var self = this;
+                        deleteJSON('/api/resources?name=' + res.uri.replace('#','%23'), function (err, results) {
+                            self.$data.resources.splice(index,1);
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    // 加载资源的时候需要从name中拆分出各个属性用于ui控制
+    function loadResource(res){
+        var uri = res.name;
+        res.uri = uri;
+        res.type = 'res';
+        res.isCollection = false;
+
+        pos1 = uri.indexOf(':');
+        pos2 = uri.indexOf('#');
+        if (pos1 > -1 && pos2 > -1){ // name:type#value格式资源 按:拆分name和type
+            res.name = uri.substring(0,pos1);
+            res.type = uri.substring(pos1+1, pos2);
+            res.value = uri.substring(pos2+1);
+        } else if (pos2 > -1){ // type#name格式资源 按#拆分type和name
+            res.name = uri.substring(pos2+1);
+            res.type = uri.substring(0,pos2);
+        } else if (pos1 > -1){ // name:value格式资源 按:拆分name和value
+            res.name = uri.substring(0,pos1);
+            res.value = uri.substring(pos1+1);
+        }
+        if(res.type.startsWith('collection<') && res.type.endsWith('>')) {
+            res.isCollection = true;
+            res.type = res.type.substring('collection<'.length, res.type.length -1);
+        }
+        
+        $.each(res.items, function(index, subRes){
+            uri = subRes.name;
+            subRes.uri = uri;
+            subRes.type = 'res';
+            subRes.isCollection = false;
+
+            pos1 = uri.indexOf(':');
+            pos2 = uri.indexOf('#');
+            if (pos1 > -1 && pos2 > -1){ // name:type#value格式资源 按:拆分name和type
+                subRes.name = uri.substring(0,pos1);
+                subRes.type = uri.substring(pos1+1, pos2);
+                subRes.value = uri.substring(pos2+1);
+            } else if (pos2 > -1){ // type#name格式资源 按#拆分type和name
+                subRes.name = uri.substring(pos2+1);
+                subRes.type = uri.substring(0,pos2);
+            } else if (pos1 > -1){ // name:value格式资源 按:拆分name和value
+                subRes.name = uri.substring(0,pos1);
+                subRes.value = uri.substring(pos1+1);
+            }
+            if(subRes.type.startsWith('collection<') && subRes.type.endsWith('>')) {
+                subRes.isCollection = true;
+                subRes.type = subRes.type.substring('collection<'.length, subRes.type.length -1);
+            }
+        })
+        res.itemsStr = res.items.map(function(item){return item.uri;}).join();
+    }
+    // 保存资源的时候需要组装各个属性并传递name才能保存下来
+    function saveResource(res){
+        var uri = res.name;
+        if(res.type && res.value) {
+            if(res.isCollection) uri += ':collection<' + res.type + '>#' + res.value;
+            else if(res.type != 'res') uri += ':' + res.type + '#' + res.value;
+            else uri = res.name + ':' + res.value;
+        }
+        else if(res.type) {
+            if(res.isCollection) uri = 'collection<' + res.type + '>#' + res.name;
+            else if(res.type != 'res') uri = res.type + '#' + res.name;
+        }
+        res.uri = uri;
+        res.name = uri;
+
+        var model = { uri:uri, name:res.name, type:res.type, isCollection:res.isCollection, items:[] };
+        $.each(res.items, function(index, item){
+            uri = item.name;         
+            if(item.type && item.value) {
+                if(item.isCollection) uri += ':collection<' + item.type + '>#' + item.value;
+                else if(item.type != 'res') uri += ':' + item.type + '#' + item.value;
+                else uri = item.name + ':' + item.value;
+            }
+            else if(item.type) {
+                if(item.isCollection) uri = 'collection<' + item.type + '>#' + item.name;
+                else if(item.type != 'res') uri = item.type + '#' + item.name;
+            }
+            item.uri = uri;
+            item.name = uri;
+            model.items.push({ uri:uri, name:item.name, type:item.type, isCollection:item.isCollection, items:[] });    
+        })
+
+        return model;
+    }
+
+    $(function() {
+        getJSON('/api/resources', function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            
+            resources = results.resources;
+            $.each(resources, function(index, res){
+                loadResource(res);
+            })
+
+            initGrid(resources);
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+
+    <div class="uk-width-1-1 uk-margin-bottom">
+        <div class="uk-panel uk-panel-box">
+            <ul class="uk-breadcrumb">
+                <li><a href="/manage/comments">评论</a></li>
+                <li><a href="/manage/blogs">日志</a></li>
+                <li><a href="/manage/users">用户</a></li>
+                <li><a href="/manage/datasources">数据源</a></li>
+                <li><a href="/manage/metadata">元数据</a></li>
+                <li class="uk-active"><span>资源</span></li>
+            </ul>
+        </div>
+    </div>
+    
+    <div id="error" class="uk-width-1-1">
+    </div>
+
+    <div id="loading" class="uk-width-1-1 uk-text-center">
+        <span><i class="uk-icon-spinner uk-icon-medium uk-icon-spin"></i> 正在加载...</span>
+    </div>
+    
+    <div id="vm_tree" class="uk-width-1-5">
+        navigator
+    </div>
+
+    <div id="vm_grid" class="uk-width-medium-4-5">
+        <div class="uk-panel uk-panel-box uk-panel-header">
+            <div style="position: absolute; right: 50px; top: 25px;">
+                <i v-on="click: open_meta(res)" class="uk-icon-book" data-uk-modal="{target:'#vm_meta',center:true}"></i>
+                <i v-on="click: open_form(res)" class="uk-icon-plus" data-uk-modal="{target:'#vm_form',center:true}"></i>
+            </div>
+            <div class="uk-panel-title">resource manager</div>
+    
+            <div class="uk-panel-body">
+                <table class="uk-table uk-table-hover">
+                    <thead>
+                        <tr>
+                            <th class="uk-width-1-10">id</th>
+                            <th class="uk-width-1-10">type</th>
+                            <th class="uk-width-2-10">name</th>
+                            <th class="uk-width-5-10">items</th>
+                            <th class="uk-width-1-10">actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-repeat="res: resources" >
+                            <td>
+                                <span v-text="$index+1"></span>
+                            </td>
+                            <td>
+                                <span v-text="res.type"></span>
+                            </td>
+                            <td>
+                                <span v-text="res.name"></span>
+                            </td>
+                            <td>
+                                <span v-text="res.itemsStr"></span>
+                            </td>
+                            <td>
+                                <i v-on="click: edit(res,$index)" class="uk-icon-edit" data-uk-modal="{target:'#vm_form',center:true}"></i>
+                                <i v-on="click: remove(res,$index)" class="uk-icon-remove"></i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="vm_meta" class="uk-modal">
+        <div class="uk-modal-dialog uk-panel uk-panel-box uk-panel-header">
+                <a class="uk-modal-close uk-close"></a>
+            <div style="position: absolute; right: 50px; top: 30px;">
+                <i v-on="click: remove_meta(model)" class="uk-icon-trash-o" style="font-size: 8px;"></i>
+                <i v-on="click: edit_meta(model)" class="uk-icon-edit" style="font-size: 8px;"></i>
+            </div>
+            <div class="uk-panel-title"v-text="model.name"></div>
+    
+            <div class="uk-panel-body">
+                <table class="uk-table uk-table-hover">
+                    <thead>
+                        <tr>
+                            <th class="uk-width-1-10">id</th>
+                            <th class="uk-width-5-10">name</th>
+                            <th class="uk-width-2-10">type</th>
+                            <th class="uk-width-2-10">isCollection</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-repeat="item: model.items" >
+                            <td>
+                                <span v-text="$index+1"></span>
+                            </td>
+                            <td>
+                                <span v-text="item.name"></span>
+                            </td>
+                            <td>
+                                <span v-text="item.type||'res'"></span>
+                            </td>
+                            <td>
+                                <span v-text="item.isCollection||false"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="vm_form" class="uk-modal">
+        <div class="uk-modal-dialog uk-panel uk-panel-box uk-panel-header">
+                <a class="uk-modal-close uk-close"></a>
+            <div style="position: absolute; right: 50px; top: 30px;">
+                <i v-on="click: save(model)" class="uk-icon-save" style="font-size: 8px;"></i>
+                <i v-on="click: cancel(model)" class="uk-icon-undo" style="font-size: 8px;"></i>
+            </div>
+            <div class="uk-panel-title" v-text="model.name"></div>
+    
+            <div class="uk-panel-body">
+                <div class="item">
+                    <span class="label">name：</span>
+                    <input style="width:140px; height:18px;" v-model="model.name">
+                    <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:33px; margin-top: -3px; margin-left: -3px;">
+                        <input style="width:100%; height: 18px; cursor: pointer;" v-model="model.type">
+                        <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
+                            <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
+                                <li v-on="click: selResourceType(model,{'uri':'res', 'name':'res'},$event,'header')" v-class="selected:subItem.type=='res'">res</li>
+                                <li v-on="click: selResourceType(model,resItem,$event,'header')" v-repeat="resItem: resources" v-text="resItem.uri" v-class="selected:subItem.type==resItem.uri"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="item"  v-repeat="item: model.items">
+                    <span class="label" v-text="item.name+'：'"></span>
+                    <input v-show="item.name!='items'" style="height:18px;" v-model="item.value">
+                    <input v-show="item.name=='items'" style="height:18px;" v-model="itemsValue">
+                    
+                    <i v-show="item.name=='items'" v-on="click: addSubItem(-1,item,$event)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+
+                    <div class="subitem" v-show="item.name=='items'" v-repeat="subItem: item.items">
+                        <input style="width:140px; height:18px;" v-model="subItem.name">
+                        <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:33px; margin-top: -3px; margin-left: -3px;">
+                            <input style="width:100%; height: 18px; cursor: pointer;" v-model="subItem.type">
+                            <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
+                                <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
+                                    <li v-on="click: selResourceType(subItem,{'uri':'res', 'name':'res'},$event,'body')" v-class="selected:subItem.type=='res'">res</li>
+                                    <li v-on="click: selResourceType(subItem,resItem,$event,'body')" v-repeat="resItem: resources" v-text="resItem.uri" v-class="selected:subItem.type==resItem.uri"></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <i v-on="click: isCollectionSubItem($index,item,$event)" v-class="uk-icon-users: subItem.isCollection, uk-icon-user: !subItem.isCollection" style="font-size: 6px; cursor: pointer;"></i>
+                        <i v-on="click: addSubItem($index,item,$event)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                        <i v-on="click: removeSubItem($index,item,$event)" class="uk-icon-minus" style="font-size: 6px; cursor: pointer;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}

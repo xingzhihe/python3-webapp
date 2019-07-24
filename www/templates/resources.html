@@ -33,12 +33,27 @@
     }
 
     .uk-panel-body {
-        margin-left: 10px;
-        margin-right: 5px;
+        margin-left: 5px;
+        margin-right: 0px;
     }
     .uk-panel-body span.item {
         display: inline-block;
         margin-right: 5px;
+    }
+    ul.uk-nav-dropdown > li.selected {
+        background-color: #b5e5f7;
+    }
+    .item-key {
+        width: 30%;
+        display: inline-block;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        vertical-align: middle;
+    }
+    .item-value {
+        width: 65%;
+        height: 18px;
+        display: inline-block;
     }
 </style>
 <script>
@@ -57,6 +72,9 @@
                 load_databases: function (ds) {
                     loadDatabases(ds);
                 }
+            },
+            bb:function(){
+                alert('ok');
             }
         });
     }
@@ -67,11 +85,14 @@
             el: '#vm_grid', 
             data: {
                 newResource: { 
+                    uri : "resource1", 
                     name : "resource1", 
+                    isCollection : false,
+                    type : "res", 
                     items: [
-                        { name : "item1", items: []},
-                        { name : "item2", items: []},
-                        { name : "item3", items: []}
+                        { uri : "item1", name : "item1", isCollection : false, type : "res", items: []},
+                        { uri : "item2", name : "item2", isCollection : false, type : "res", items: []},
+                        { uri : "item3", name : "item3", isCollection : false, type : "res", items: []}
                     ]
                 },
                 resources:resources
@@ -83,19 +104,38 @@
                     this.bakResource = this.$data.newResource;
                     this.$data = this.$data;
                 },
-                sel_res_type: function(res, evt){
-                    console.log(res.name);
-                    $(evt.currentTarget).parents("div.uk-dropdown").prev().val(res.name);
+                sel_res_type: function(res, resSelected, evt, pos){
+                    console.log(resSelected.uri);
+                    res.type = resSelected.uri;
+                    var uri = res.name;
+                    if(res.type != 'res' && res.type.indexOf('#') > -1) uri = res.name + ':' + res.type;
+                    else if(res.type != 'res') uri = res.type + '#' + res.name;
+                    res.uri = uri;
+
+                    if(resSelected.uri != 'res' && pos == 'header'){
+                        this.$data.resSelected = resSelected;
+                    }else{
+                        this.$data.resSelected = undefined;
+                    }
+
+                    $(evt.currentTarget).parents("div.uk-dropdown").prev().val(resSelected.uri);
                     $(evt.currentTarget).parents("div.uk-button-dropdown").removeClass("uk-open");
+                    $(evt.currentTarget).addClass("selected").siblings().removeClass("selected");
                     evt.stopPropagation();
+
+                    this.$data = this.$data;
                 },
-                res_item_add: function(index, res, evt){
-                    index++;
-                    var obj = {name:"item"+index, items:[]};
-                    res.items.splice(index,0,obj);
+                res_item_isCollection: function(itemIndex, res, evt){
+                    var item = res.items[itemIndex];
+                    item.isCollection = !item.isCollection;
                 },
-                res_item_del: function(index, res, evt){
-                    res.items.splice(index,1);
+                res_item_add: function(itemIndex, res, evt){
+                    itemIndex++;
+                    var obj = {name:"item"+itemIndex, items:[]};
+                    res.items.splice(itemIndex,0,obj);
+                },
+                res_item_del: function(itemIndex, res, evt){
+                    res.items.splice(itemIndex,1);
                 },
                 res_operation: function(res, index, cmd){
                     if(cmd == 'edit'){ 
@@ -111,14 +151,20 @@
                             this.$data = this.$data;
                         }
                     }else if(cmd == 'save'){
-                        var model = { name:res.name, items:[] };
-                        $.each(res.items, function(index, item){
-                            model.items.push({ name:item.name, items:[] });    
-                        })
-                        
+                        if(this.$data.resSelected) {
+                            var resSelected = this.$data.resSelected;
+                            model = { name : res.name, type : res.type, items : [] };
+                            $.each(resSelected.items, function(index, item){
+                                model.items.push({ name : item.name + ':' + item.value, type : 'res', items : [] });
+                            });
+                        } else {
+                            model = saveResource(res);
+                        }
+                        console.log("uri:" + model.uri + " , name:" + model.name + " , type:" + model.type + ", isCollection:" + model.isCollection);
                         var self = this;
                         if(this.isNew){
                             postJSON('/api/resources', model, function (err, results) {
+                                loadResource(model);
                                 self.isNew = false;
                                 self.$data.resources.push(model);
                                 self.$data.newResource = self.bakResource;
@@ -126,23 +172,82 @@
                             });
                         }else{
                             res.edit = false;
-                            putJSON('/api/resources/' + index, model, function (err, results) {
+                            putJSON('/api/resources', model, function (err, results) {
+                                loadResource(model);
                                 self.$data.resources.splice(index,1,model);
                             });
                         }
                     }else if(cmd == 'remove'){
-                        var model = { name:res.name, items:[] };
-                        $.each(res.items, function(index, item){
-                            model.items.push(item.name);    
-                        })
-                        var self = this;
-                        deleteJSON('/api/resources/' + index, function (err, results) {
-                            self.$data.resources.splice(index,1);
-                        });
+                        name = res.uri;
+                        if (confirm('确认要删除资源“' + res.uri + '”？删除后不可恢复！')) {
+                            var self = this;
+                            deleteJSON('/api/resources?name=' + res.uri.replace('#','%23'), function (err, results) {
+                                self.$data.resources.splice(index,1);
+                            });
+                        }
                     }
                 }
             }
         });
+    }
+
+    // 加载资源的时候需要从name中拆分出各个属性用于ui控制
+    function loadResource(res){
+        var uri = res.name;
+        res.uri = uri;
+
+        pos1 = uri.indexOf(':');
+        pos2 = uri.indexOf('#');
+        if (pos1 > -1 && pos2 > -1){ // name:type#value格式资源 按:拆分name和type
+            res.name = uri.substring(0,pos1);
+            res.type = uri.substring(pos1+1);
+        } else if (pos2 > -1){ // type#name格式资源 按#拆分type和name
+            res.name = uri.substring(pos2+1);
+            res.type = uri.substring(0,pos2);
+        }else{
+            res.type = 'res';
+        }
+        
+        $.each(res.items, function(index, subRes){
+            uri = subRes.name;
+            subRes.uri = uri;
+            subRes.type = 'res';
+            subRes.isCollection = false;
+
+            pos1 = uri.indexOf(':');
+            pos2 = uri.indexOf('#');
+            if (pos1 > -1) { // name:xxxx格式资源 按:拆分name和type
+                subRes.name = uri.substring(0,pos1);
+                subRes.type = uri.substring(pos1+1);
+            } else if (pos2 > -1){ // type#name格式资源 按#拆分type和name
+                subRes.name = uri.substring(pos2+1);
+                subRes.type = uri.substring(0,pos2);
+            }
+            if(subRes.type.startsWith('collection<') && subRes.type.endsWith('>')) {
+                subRes.isCollection = true;
+                subRes.type = subRes.type.substring('collection<'.length, subRes.type.length -1);
+            }
+        })
+    }
+    // 保存资源的时候需要组装各个属性并转递name才能保存下来
+    function saveResource(res){
+        var uri = res.name;
+        if(res.type != 'res' && res.type.indexOf('#') > -1) uri = res.name + ':' + res.type;
+        else if(res.type != 'res') uri = res.type + '#' + res.name;
+        res.uri = uri;
+        res.name = uri;
+        var model = { uri:uri, name:res.name, type:res.type, isCollection:res.isCollection, items:[] };
+        $.each(res.items, function(index, item){
+            uri = item.name;
+            if(item.type != 'res' && item.type.indexOf('#') > -1) uri = item.name + ':' + item.type;
+            else if(item.type != 'res') uri = item.type + '#' + item.name;
+            if(item.isCollection) uri = item.name + ':collection<' + item.type + '>';
+            item.uri = uri;
+            item.name = uri;
+            model.items.push({ uri:uri, name:item.name, type:item.type, isCollection:item.isCollection, items:[] });    
+        })
+
+        return model;
     }
 
     $(function() {
@@ -150,9 +255,14 @@
             if (err) {
                 return fatal(err);
             }
+            
+            resources = results.resources;
+            $.each(resources, function(index, res){
+                loadResource(res);
+            })
 
-            initTree(results.resources);
-            initGrid(results.resources);
+            initTree(resources);
+            initGrid(resources);
         });
     });
 
@@ -188,6 +298,7 @@
 
     <div id="vm_main" class="uk-width-7-10">
         <div id="vm_grid" class="uk-grid uk-grid-small" data-uk-grid-margin>
+            <!--列表展现资源-->
             <div class="uk-width-medium-1-5" v-repeat="res: resources">
                 <div v-show="res.edit==true" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px; margin-top: 10px;">
                     <div style="position: absolute; right: 2px; top: 0px; cursor: pointer;">
@@ -195,24 +306,35 @@
                         <i v-on="click: res_operation(res,$index,'undo')" class="uk-icon-undo" style="font-size: 8px;"></i>
                     </div>
                     <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;">
-                        <input v-model="res.name" style="width:80%; font-size: 8px;">
+                        <input v-model="res.name" style="width:50%; font-size: 8px;">
+                        <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:30%; margin-top: -3px; margin-left: -3px;">
+                            <input style="width:100%; cursor: pointer; font-size: 8px;"  v-model="res.type">
+                            <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
+                                <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
+                                    <li v-on="click: sel_res_type(res,{'uri':'res', 'name':'res'},$event,'header')" v-class="selected:res.type=='res'">res</li>
+                                    <li v-on="click: sel_res_type(res,resItem,$event,'header')" v-repeat="resItem: resources" v-text="resItem.uri" v-class="selected:res.type==resItem.uri"></li>
+                                </ul>
+                            </div>
+                        </div>
                     </h3>
         
                     <div class="uk-panel-body">
                         <div v-repeat="item: res.items">
                             <input style="width:50px; height: 18px;" v-model="item.name">
-                            <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:40px; margin-top: -3px;">
-                                <input style="width:100%; height: 18px; cursor: pointer;" value="res">
+                            <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:35px; margin-top: -3px; margin-left: -3px;">
+                                <input style="width:100%; height: 18px; cursor: pointer;" v-model="item.type">
                                 <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
                                     <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
-                                        <li v-on="click: sel_res_type(resItem,$event)" v-repeat="resItem: resources" v-text="resItem.name"></li>
+                                        <li v-on="click: sel_res_type(item,{'uri':'res', 'name':'res'},$event,'body')" v-class="selected:item.type=='res'">res</li>
+                                        <li v-on="click: sel_res_type(item,resItem,$event,'body')" v-repeat="resItem: resources" v-text="resItem.uri" v-class="selected:item.type==resItem.uri"></li>
                                     </ul>
                                 </div>
                             </div>
-                            <i v-on="click: res_item_add($index,res,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
-                            <i v-on="click: res_item_del($index,res,$evemt)" class="uk-icon-minus" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-show="item.type!='res'" v-on="click: res_item_isCollection($index,res,$event)" v-class="uk-icon-users: item.isCollection, uk-icon-user: !item.isCollection" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-on="click: res_item_add($index,res,$event)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-on="click: res_item_del($index,res,$event)" class="uk-icon-minus" style="font-size: 6px; cursor: pointer;"></i>
                         </div>
-                        <i v-show="res.items.length == 0" v-on="click: res_item_add(0,res,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                        <i v-show="res.items.length == 0" v-on="click: res_item_add(0,res,$event)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
                     </div>
                 </div>
                 <div v-show="!res.edit" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px;">
@@ -220,38 +342,58 @@
                         <i v-on="click: res_operation(res,$index,'remove')" class="uk-icon-trash-o" style="font-size: 8px;"></i>
                         <i v-on="click: res_operation(res,$index,'edit')" class="uk-icon-edit" style="font-size: 8px;"></i>
                     </div>
-                    <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;" v-text="res.name"></h3>
+                    <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;" v-text="res.uri"></h3>
         
                     <div class="uk-panel-body">
-                        <span class="item" v-repeat="item: res.items" v-text="item.name"></span>
+                        <span class="item" v-repeat="item: res.items" v-text="item.uri"></span>
                     </div>
                 </div>
             </div>
+
+            <!--新建资源-->
             <div class="uk-width-medium-1-5">
                 <div v-show="isNew" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px; margin-top: 10px;">
                     <div style="position: absolute; right: 2px; top: 0px; cursor: pointer;">
-                        <i v-on="click: res_operation(newResource,$index,'save')" class="uk-icon-save" style="font-size: 8px;"></i>
-                        <i v-on="click: res_operation(newResource,$index,'undo')" class="uk-icon-undo" style="font-size: 8px;"></i>
+                        <i v-on="click: res_operation(newResource,-1,'save')" class="uk-icon-save" style="font-size: 8px;"></i>
+                        <i v-on="click: res_operation(newResource,-1,'undo')" class="uk-icon-undo" style="font-size: 8px;"></i>
                     </div>
                     <h3 class="uk-panel-title" style="padding-bottom:0px; margin-bottom:5px;">
-                        <input v-model="newResource.name" style="width:80%; font-size: 8px;">
+                        <input v-model="newResource.name" style="width:50%; font-size: 8px;">
+                        <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:30%; margin-top: -3px; margin-left: -3px;">
+                            <input style="width:100%; cursor: pointer; font-size: 8px;"  v-model="newResource.type">
+                            <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
+                                <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
+                                    <li v-on="click: sel_res_type(newResource,{'uri':'res', 'name':'res'},$event,'header')" v-class="selected:res.type=='res'">res</li>
+                                    <li v-on="click: sel_res_type(newResource,resItem,$event,'header')" v-repeat="resItem: resources" v-text="resItem.uri" v-class="selected:res.type==resItem.uri"></li>
+                                </ul>
+                            </div>
+                        </div>
                     </h3>
         
-                    <div class="uk-panel-body">
+                    <div v-show="!resSelected" class="uk-panel-body">
                         <div v-repeat="item: newResource.items">
                             <input style="width:50px; height: 18px;" v-model="item.name">
-                            <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:40px; margin-top: -3px;">
-                                <input style="width:100%; height: 18px; cursor: pointer;" value="res">
+                            <div class="uk-button-dropdown" data-uk-dropdown="{mode:'click',pos:'bottom-center'}" aria-haspopup="false" aria-expanded="false" style="width:35px; margin-top: -3px;margin-left: -3px;">
+                                <input style="width:100%; height: 18px; cursor: pointer;" v-model="item.type">
                                 <div class="uk-dropdown uk-dropdown-bottom" style="padding-top:0px; margin-top: -2px; cursor: pointer;">
                                     <ul class="uk-nav uk-nav-dropdown" style="margin-left:-10px;">
-                                        <li v-on="click: sel_res_type(resItem,$event)" v-repeat="resItem: resources" v-text="resItem.name"></li>
+                                        <li v-on="click: sel_res_type(item,{'uri':'res', 'name':'res'},$event,'body')" v-class="selected:item.type=='res'">res</li>
+                                        <li v-on="click: sel_res_type(item,resItem,$event,'body')" v-repeat="resItem: resources" v-text="resItem.uri" v-class="selected:item.type==resItem.uri"></li>
                                     </ul>
                                 </div>
                             </div>
-                            <i v-on="click: res_item_add($index,newResource,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
-                            <i v-on="click: res_item_del($index,newResource,$evemt)" class="uk-icon-minus" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-show="item.type!='res'" v-on="click: res_item_isCollection($index,newResource,$event)" v-class="uk-icon-users: item.isCollection, uk-icon-user: !item.isCollection" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-on="click: res_item_add($index,newResource,$event)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                            <i v-on="click: res_item_del($index,newResource,$event)" class="uk-icon-minus" style="font-size: 6px; cursor: pointer;"></i>
                         </div>
-                        <i v-show="newResource.items.length == 0" v-on="click: res_item_add(0,newResource,$evemt)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                        <i v-show="newResource.items.length == 0" v-on="click: res_item_add(0,newResource,$event)" class="uk-icon-plus" style="font-size: 6px; cursor: pointer;"></i>
+                    </div>
+
+                    <div v-show="resSelected" class="uk-panel-body">
+                        <div v-repeat="item: resSelected.items">
+                            <span class="item-key" v-text="item.name"></span>
+                            <input class="item-value" v-model="item.value">
+                        </div>
                     </div>
                 </div>
                 <div v-show="!isNew" class="uk-panel uk-panel-box uk-panel-header" style="padding:5px;">

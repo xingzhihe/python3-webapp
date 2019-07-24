@@ -38,6 +38,18 @@ def update_resources(request, *, index, name,items):
     rootResource = srv.rootResource
     return dict(resources=rootResource.items)
 
+@put('/api/resources')
+def update_resources_name(request, *, name,items):
+    resource = __dic2Resource__(name, items)
+    # resource = Resource(name)
+    # for item in items:
+    #     resource.appendItem(Resource(item.name))
+
+    srv = ResourceService()
+    srv.updateWithName(name, resource)
+    rootResource = srv.rootResource
+    return dict(resources=rootResource.items)
+
 @delete('/api/resources/{index}')
 def remove_resources_index(request, *, index):
     srv = ResourceService()
@@ -46,14 +58,14 @@ def remove_resources_index(request, *, index):
     return dict(resources=rootResource.items)
 
 @delete('/api/resources')
-def remove_resources(request, *, name,items):
-    resource = __dic2Resource__(name, items)
+def remove_resources_name(request, *, name):
+    # resource = __dic2Resource__(name, items)
     # resource = Resource(name)
     # for item in items:
     #     resource.appendItem(Resource(item.name))
 
     srv = ResourceService()
-    srv.remove(resource)
+    srv.removeByName(name)
     rootResource = srv.rootResource
     return dict(resources=rootResource.items)
 

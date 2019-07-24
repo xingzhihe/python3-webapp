@@ -196,6 +196,16 @@ class ResourceService(object):
             self.factory.save(self.rootResource)
         except ValueError:
             print('update resource occur error!')
+    
+    def updateWithName(self, name, resource):
+        try:
+            res = [item for item in self.rootResource.items if item.name == name]
+            if res:
+                index = self.rootResource.items.index(res[0])
+                self.rootResource.items[index] = resource
+                self.factory.save(self.rootResource)
+        except ValueError:
+            print('update resource occur error!')
         
     def remove(self, resource):
         try:
@@ -205,6 +215,16 @@ class ResourceService(object):
                 index = self.rootResource.items.index(resource)
             del self.rootResource.items[index]
             self.factory.save(self.rootResource)
+        except ValueError:
+            pass
+        
+    def removeByName(self, name):
+        try:
+            res = [item for item in self.rootResource.items if item.name == name]
+            if res:
+                index = self.rootResource.items.index(res[0])
+                del self.rootResource.items[index]
+                self.factory.save(self.rootResource)
         except ValueError:
             pass
 
